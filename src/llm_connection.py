@@ -1,19 +1,17 @@
 
 import atexit
 import json
-import pickle
-import re
 import os
 import requests
 import config
-from config import OLLAMA_TEMPERATURE
-from collections import defaultdict
 import hashlib
+from config import OLLAMA_TEMPERATURE
 
 cache = dict()
 loaded = False
 
 def load_cache():
+    global loaded
     if loaded:
         return
     responses_cache_file = config.CACHE_DIR / f"{config.OLLAMA_MODEL_NAME}-responses.json"
@@ -21,23 +19,26 @@ def load_cache():
         with open(responses_cache_file, "r") as file:
             global cache
             cache = json.load(file)
+    loaded = True
     atexit.register(save_cache)
 
 def save_cache():
+    global cache
     responses_cache_file = config.CACHE_DIR / f"{config.OLLAMA_MODEL_NAME}-responses.json"
     with open(responses_cache_file, "w") as file:
         json.dump(cache, file, indent = 2)
 
-def get_cached(prompt):
+def get_cached(cache_key):
     global cache
-    return cache.get(hashlib.sha256(prompt.encode("utf-8")).hexdigest(), None)
+    return cache.get(cache_key, None)
 
-def save_to_cache(prompt, response):
+def save_to_cache(response, cache_key):
     global cache
-    cache[hashlib.sha256(prompt.encode("utf-8")).hexdigest()] = response
+    cache[cache_key] = response
 
 def generate(prompt: str,
-             num_predict: int = 256) -> str:
+             num_predict: int = 256,
+             cache_key: str = None) -> str:
 
     """
     Send a simple generate query to the Ollama API.
@@ -45,9 +46,13 @@ def generate(prompt: str,
     Args:
         prompt: the prompt to send to the LLM.
         num_predict: maximum length of the predicted message.
+        cache_key: key where to save the LLM's response in the cache.
+                   By default, a key is generated from the prompt.
     """
     load_cache()
-    response_cache = get_cached(prompt)
+    if not cache_key:
+        cache_key = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+    response_cache = get_cached(cache_key)
     if response_cache:
         return response_cache
         
@@ -67,7 +72,7 @@ def generate(prompt: str,
     )
     if response.ok:
         response = response.json()['response'].strip()
-        save_to_cache(prompt, response)
+        save_to_cache(response, cache_key)
         return response
     else:
         raise requests.ConnectionError(response.json()["error"])
