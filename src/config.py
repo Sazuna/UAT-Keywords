@@ -62,16 +62,23 @@ async def connect_to_ollama():
     global OLLAMA_MODEL_NAME
     global SUMMARIZE_MODEL
     if "SSH_CONNECTION" in os.environ or "SSH_CLIENT" in os.environ:
-        # tycho
         OLLAMA_HOST = os.environ["OLLAMA_HOST"]
-        if not OLLAMA_HOST:
-            print("OLLAMA_HOST is not set. Please add to your ~/.bashrc:")
-            print("export OLLAMA_HOST=\"http://{armstrong_IPV4}:11434\"")
-            raise EnvironmentError("OLLAMA_HOST not set")
-        OLLAMA_MODEL = "deepseek-v3:latest" # 400 GB (~12s)
-        OLLAMA_MODEL_NAME = "DeepSeek-v3:671b"
-        SUMMARIZE_MODEL = "deepseek-v3:latest"
-        CONNECTION_MODE = "armstrong ollama"
+        if "127.0.0.1" in OLLAMA_HOST:
+            # tycho91
+            OLLAMA_MODEL = "deepseek-v3:latest" # 400 GB (~12s)
+            OLLAMA_MODEL_NAME = "DeepSeek-v3:671b"
+            SUMMARIZE_MODEL = "deepseek-v3:latest"
+            CONNECTION_MODE = "tycho91 ollama"
+        else:
+            # another tycho
+            if not OLLAMA_HOST:
+                print("OLLAMA_HOST is not set. Please add to your ~/.bashrc:")
+                print("export OLLAMA_HOST=\"http://{armstrong_IPV4}:11434\"")
+                raise EnvironmentError("OLLAMA_HOST not set")
+            OLLAMA_MODEL = "deepseek-v3:latest" # 400 GB (~12s)
+            OLLAMA_MODEL_NAME = "DeepSeek-v3:671b"
+            SUMMARIZE_MODEL = "deepseek-v3:latest"
+            CONNECTION_MODE = "armstrong ollama"
     else:
         OLLAMA_HOST = "http://localhost:11435"
         try:

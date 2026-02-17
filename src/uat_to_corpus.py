@@ -2,20 +2,20 @@
 """
 Transforms UATs into text chunks
 """
+import atexit
 import pathlib
 from rdflib import Graph, SKOS, OWL, DCTERMS, Literal, XSD
 from collections import defaultdict
-from llm_connection import generate
+from llm_connection import generate, save_cache
 from config import DATA_DIR, UATS_JSON
 import json
 
 
-def augment_definition(definition: str):
+def augment_definition(definition: str, key: str):
     """
     Verbalization of UATs for UATs with no definition.
     """
-    prompt = f"""Define this astrophysics concept: {definition}. Maximum 2 sentences. Maximum 100 words. No examples. No bullet points."""
-    print(generate(prompt, num_predict = 200))
+    prompt = f"Define this astrophysics concept: {definition}. Maximum 2 sentences. Maximum 100 words. No examples. No bullet points."
     return generate(prompt)
 
 
@@ -61,9 +61,9 @@ def main(uat_file: pathlib.Path):
             del description_by_uat[uat]
             continue
         if not SKOS.definition in values:
-            definition = augment_definition(str(values[SKOS.prefLabel][0]))
+            definition = augment_definition(str(values[SKOS.prefLabel][0]), key = uat)
             values[SKOS.definition] = definition
-            exit()
+
 
 
     with open(UATS_JSON, "w") as file:
