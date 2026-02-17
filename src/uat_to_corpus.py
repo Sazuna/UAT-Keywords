@@ -1,13 +1,25 @@
 #!/bin/env python3
 """
-Transforms UAT into text chunks
+Transforms UATs into text chunks
 """
-
-from rdflib import Graph, SKOS, OWL, RDFS, DCTERMS, RDF, Literal, XSD
+import pathlib
+from rdflib import Graph, SKOS, OWL, DCTERMS, Literal, XSD
 from collections import defaultdict
+from llm_connection import generate
+from config import DATA_DIR, UATS_JSON
 import json
 
-def main(uat_file: str):
+
+def augment_definition(definition: str):
+    """
+    Verbalization of UATs for UATs with no definition.
+    """
+    prompt = f"""Define this astrophysics concept: {definition}. Maximum 2 sentences. Maximum 100 words. No examples. No bullet points."""
+    print(generate(prompt, num_predict = 200))
+    return generate(prompt)
+
+
+def main(uat_file: pathlib.Path):
     g = Graph()
     g.parse(uat_file)
     description_by_uat = defaultdict(lambda: defaultdict(list))
@@ -43,16 +55,20 @@ def main(uat_file: str):
     for s, _, o in g.triples((None, OWL.deprecated,  Literal(True, datatype=XSD.boolean))):
         del description_by_uat[s]
 
-
     # Remove UATs that do not have a prefLabel (uat/1)
     for uat, values in description_by_uat.copy().items():
         if not SKOS.prefLabel in values:
             del description_by_uat[uat]
+            continue
+        if not SKOS.definition in values:
+            definition = augment_definition(str(values[SKOS.prefLabel][0]))
+            values[SKOS.definition] = definition
+            exit()
 
 
-    with open("output.json", "w") as file:
+    with open(UATS_JSON, "w") as file:
         json.dump(description_by_uat, file, indent = 2)
 
 
 if __name__ == "__main__":
-    main("../corpus/UAT_v6.0.0.rdf")
+    main(DATA_DIR / "UAT_v6.0.0.rdf")
