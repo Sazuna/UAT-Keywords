@@ -26,7 +26,7 @@ def load_cache():
 def save_cache():
     responses_cache_file = config.CACHE_DIR / f"{config.OLLAMA_MODEL_NAME}-responses.json"
     with open(responses_cache_file, "w") as file:
-        json.dump(cache, file)
+        json.dump(cache, file, indent = 2)
 
 def get_cached(prompt):
     global cache
@@ -37,7 +37,6 @@ def save_to_cache(prompt, response):
     cache[hashlib.sha256(prompt.encode("utf-8")).hexdigest()] = response
 
 def generate(prompt: str,
-             # model: str,
              num_predict: int = 256) -> str:
 
     """
@@ -45,7 +44,6 @@ def generate(prompt: str,
 
     Args:
         prompt: the prompt to send to the LLM.
-        # model: the model to use.
         num_predict: maximum length of the predicted message.
     """
     load_cache()
@@ -61,10 +59,14 @@ def generate(prompt: str,
             'stream': False,
             'temperature': OLLAMA_TEMPERATURE,
             'num_predict': num_predict,
+            "options": {
+                "temperature": OLLAMA_TEMPERATURE,
+                "num_predict": num_predict
+            }
         }
     )
     if response.ok:
-        response = response.json()['response'].strip().lower()
+        response = response.json()['response'].strip()
         save_to_cache(prompt, response)
         return response
     else:

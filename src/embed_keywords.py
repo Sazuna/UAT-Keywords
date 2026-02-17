@@ -7,13 +7,14 @@ import numpy as np
 from time import time
 from rdflib import SKOS, DCTERMS
 import encoder
+from config import UATS_JSON, LLM_EMBEDDINGS_FILE
 
 ### AllMiniLM (test)
 from sentence_transformers import SentenceTransformer
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 def main():
-    with open("output.json", "r") as file:
+    with open(UATS_JSON, "r") as file:
         uats = json.load(file)
 
 
@@ -87,7 +88,7 @@ def main():
     embeddings = model.encode(uats_str)
     print(len(embeddings), "/ 2312 UATS (UAT 1 ignored)") # cat output.json | grep "uat" | sed -e "s/ *//g" | sed -e "s/[,:{\"]//g" | grep -e "^h.*" | sort | uniq | wc -l
     print("Elapsed:", time() - start)
-    np.save("embeddings.npy", embeddings)
+    np.save(LLM_EMBEDDINGS_FILE, embeddings)
 
     # HuggingFace model (AstroLLaMa, AstroBERT)
     start = time()
