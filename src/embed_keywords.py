@@ -4,9 +4,11 @@ Generate embeddings of keywords using an LLM embedder
 """
 import json
 import numpy as np
-from rdflib import SKOS, DCTERMS
 from time import time
+from rdflib import SKOS, DCTERMS
+import encoder
 
+### AllMiniLM (test)
 from sentence_transformers import SentenceTransformer
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
@@ -24,9 +26,9 @@ def main():
              # SKOS.editorialNote,
              # SKOS.topConceptOf,
              # SKOS.hasTopConcept,
-             # SKOS.related,
-             # SKOS.broader,
-             # SKOS.narrower,
+             SKOS.related,
+             SKOS.broader,
+             SKOS.narrower,
              DCTERMS.description,
              # DCTERMS.title, # Blank nodes
              # DCTERMS.created,
@@ -37,13 +39,18 @@ def main():
              # DCTERMS.subject,
     ]
     uats_str = []
-    keys = sorted(uats)
     p_str = [str(p) for p in all_p]
     uat_labels = dict()
+    i_by_uri = dict()
+    keys = sorted(uats)
     for i, key in enumerate(keys):
+        i_by_uri[key] = i
         uat_str = ""
         uat = uats[key]
         label = None
+        narrower = []
+        broader = []
+        related = []
         for p in p_str:
             value = uat.get(p, "")
             if value:
@@ -53,11 +60,28 @@ def main():
                     uat_str += "Examples: "
                 elif p == str(SKOS.prefLabel):
                     label = value
+                elif p == str(SKOS.narrower):
+                    narrower = value
+                    continue
+                elif p == str(SKOS.broader):
+                    broader = value
+                    continue
+                elif p == str(SKOS.related):
+                    related = value
+                    continue
                 uat_str += '; '.join(value) + '. '
-        uat_labels[i] = [key, label[0]]
+        uat_labels[i] = [key, label[0], broader, narrower, related]
         uat_str = uat_str.strip()
         uat_str = uat_str.replace('..', '.')
         uats_str.append(uat_str)
+
+    for key, label, narrowers, broaders, relateds in uat_labels.values():
+        for i, related in enumerate(relateds):
+            relateds[i] = i_by_uri[related]
+        for i, narrower in enumerate(narrowers):
+            narrowers[i] = i_by_uri[narrower]
+        for i, broader in enumerate(broaders):
+            broaders[i] = i_by_uri[broader]
 
     start = time()
     embeddings = model.encode(uats_str)
@@ -65,8 +89,12 @@ def main():
     print("Elapsed:", time() - start)
     np.save("embeddings.npy", embeddings)
 
-    with open("uat_labels.json", "w") as file:
-        json.dump(uat_labels, file, indent = 2)
+    # HuggingFace model (AstroLLaMa, AstroBERT)
+    start = time()
+    embeddings_astrollama = encoder.encode_batch(uats_str)
+    print("Elapsed:", time() - start)
+    print(type(embeddings_astrollama))
+    np.save("embeddings_astrobert.npy", embeddings_astrollama)
 
 
 if __name__ == "__main__":
