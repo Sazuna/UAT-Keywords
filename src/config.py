@@ -65,9 +65,9 @@ async def connect_to_ollama():
         OLLAMA_HOST = os.environ["OLLAMA_HOST"]
         if "127.0.0.1" in OLLAMA_HOST:
             # tycho91
-            OLLAMA_MODEL = "deepseek-v3:latest" # 400 GB (~12s)
-            OLLAMA_MODEL_NAME = "DeepSeek-v3:671b"
-            SUMMARIZE_MODEL = "deepseek-v3:latest"
+            OLLAMA_MODEL = "phi4:latest" # 14GB
+            OLLAMA_MODEL_NAME = "phi4:14b"
+            SUMMARIZE_MODEL = "phi4:latest"
             CONNECTION_MODE = "tycho91 ollama"
         else:
             # another tycho
