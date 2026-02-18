@@ -15,7 +15,7 @@ def augment_definition(definition: str, key: str):
     """
     Verbalization of UATs for UATs with no definition.
     """
-    prompt = f"Define this astrophysics concept: {definition}. Maximum 2 sentences. Maximum 100 words. No examples. No bullet points."
+    prompt = f"Define this astrophysics concept: {definition}. Maximum 1 sentence. Maximum 30 words. No examples. No bullet points."
     return generate(prompt, cache_key = key)
 
 
@@ -62,7 +62,7 @@ def main(uat_file: pathlib.Path):
             continue
         if not SKOS.definition in values:
             definition = augment_definition(str(values[SKOS.prefLabel][0]), key = str(uat))
-            values[SKOS.definition] = definition
+            values[SKOS.definition] = [definition]
 
 
 
