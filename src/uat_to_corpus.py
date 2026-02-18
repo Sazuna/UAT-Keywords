@@ -61,8 +61,7 @@ def main(uat_file: pathlib.Path):
             del description_by_uat[uat]
             continue
         if not SKOS.definition in values:
-            definition = augment_definition(str(values[SKOS.prefLabel][0]), key = uat)
-            print("def of", uat, ":", definition)
+            definition = augment_definition(str(values[SKOS.prefLabel][0]), key = str(uat))
             values[SKOS.definition] = definition
 
 
