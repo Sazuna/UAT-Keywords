@@ -104,9 +104,6 @@ def configure_ollama():
 OLLAMA_TEMPERATURE = 0 # Higher temperature = less determinist
 ALLOW_BROAD_NARROW_MATCH = False # This will add difficulty to the classification (same, distinct, narrow, broad)
 
-# LLM computation result files
-LLM_EMBEDDINGS_FILE = CACHE_DIR / f"llm_embeddings_{OLLAMA_MODEL}.pkl"
-
 # HuggingFace, sentence transformers environment variables
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -119,3 +116,7 @@ UATS_JSON = DATA_DIR / "output.json"
 
 # File for saving the UAT's embeddings
 UATS_EMBEDDINGS = CACHE_DIR / f"{SENTENCE_TRANSFORMERS_MODEL.replace('/', '-')}_embeddings.npy"
+
+# LLM computation result files
+EMBEDDING_LLM = "all-minilm"
+LLM_EMBEDDINGS_FILE = CACHE_DIR / f"llm_embeddings_{EMBEDDING_LLM}.npy"

@@ -4,7 +4,7 @@ import json
 import os
 import requests
 import hashlib
-from config import configure_ollama, OLLAMA_TEMPERATURE
+from config import configure_ollama, OLLAMA_TEMPERATURE, EMBEDDING_LLM
 import config
 
 cache = dict()
@@ -76,3 +76,21 @@ def generate(prompt: str,
         return response
     else:
         raise requests.ConnectionError(response.json()["error"])
+
+
+def encode(text: list[str]):
+    """
+    Generate embeddings from the model.
+    An embedding model might be used instead.
+    """
+    configure_ollama()
+    response = requests.post(
+        f'{config.OLLAMA_HOST}/api/embed',
+        json={
+            'model': EMBEDDING_LLM,
+            'input': text,
+        }
+    )
+
+    response.raise_for_status()
+    return response.json()["embeddings"]
