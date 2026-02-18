@@ -80,45 +80,26 @@ async def connect_to_ollama():
             SUMMARIZE_MODEL = "deepseek-v3:latest"
             CONNECTION_MODE = "armstrong ollama"
     else:
-        OLLAMA_HOST = "http://localhost:11435"
-        try:
-            # raise Exception # Force local (for test)
-            proc = await asyncio.create_subprocess_exec(
-                "ssh", "-L", "localhost:11435:145.238.151.114:11434",
-                f"{USERNAME}@tycho.obspm.fr", "-N",#../setup.sh", USERNAME],
-                stdout = asyncio.subprocess.DEVNULL,
-                stderr = asyncio.subprocess.DEVNULL
-            )
-            if not await wait_connection("localhost", 11435, timeout=10):
-                proc.terminate()
-                raise TimeoutError("SSH shuttle connection timeout")
-            OLLAMA_MODEL = "deepseek-v3:latest" # 400 GB (~12s)
-            OLLAMA_MODEL_NAME = "DeepSeek-v3:671b"
-            SUMMARIZE_MODEL = "deepseek-v3:latest"
-            CONNECTION_MODE = "armstrong ollama via tycho shuttle & redirection to local port"
-            atexit.register(proc.terminate)
-        except Exception as e:
-            # https://ceur-ws.org/Vol-3931/paper4.pdf recommands Orca2 for 7b LLMs
-            print(f"Shuttle to tycho & armstrong failed with error: {e}")
-            # local
-            port = 11434
-            OLLAMA_HOST = f"http://localhost:{port}"
-            OLLAMA_MODEL = "gemma3:4b"#"gemma3:12b"#"orca2:7b"#"ministral-3:14b"
-            OLLAMA_MODEL_NAME = "gemma3:4b"#"gemma3:12b"#"orca2:7b"#"ministral-3:14b"
-            SUMMARIZE_MODEL = "gemma3:4b"
-            CONNECTION_MODE = "local ollama"
+        # local
+        port = 11434
+        OLLAMA_HOST = f"http://localhost:{port}"
+        OLLAMA_MODEL = "phi4:latest"#"gemma3:12b"#"orca2:7b"#"ministral-3:14b"
+        OLLAMA_MODEL_NAME = "phi4:14b"#"gemma3:12b"#"orca2:7b"#"ministral-3:14b"
+        SUMMARIZE_MODEL = "phi4:latest"
+        CONNECTION_MODE = "local ollama"
     return OLLAMA_HOST, OLLAMA_MODEL, OLLAMA_MODEL_NAME, SUMMARIZE_MODEL, CONNECTION_MODE
 
 OLLAMA_HOST, OLLAMA_MODEL, OLLAMA_MODEL_NAME, SUMMARIZE_MODEL = None, None, None, None
 def configure_ollama():
     global OLLAMA_HOST
+    if OLLAMA_HOST is not None:
+        return
     global OLLAMA_MODEL
     global OLLAMA_MODEL_NAME
     global SUMMARIZE_MODEL
     OLLAMA_HOST, OLLAMA_MODEL, OLLAMA_MODEL_NAME, SUMMARIZE_MODEL, CONNECTION_MODE = asyncio.run(connect_to_ollama())
     print(f"Connected to {CONNECTION_MODE}. Using model {OLLAMA_MODEL}")
 
-configure_ollama()
 
 OLLAMA_TEMPERATURE = 0 # Higher temperature = less determinist
 ALLOW_BROAD_NARROW_MATCH = False # This will add difficulty to the classification (same, distinct, narrow, broad)
@@ -131,6 +112,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["HF_HOME"] = str(CACHE_DIR / "huggingface" ) # Must import before transformers
 SENTENCE_TRANSFORMERS_MODEL = "adsabs/astroBERT" # "UniverseTBD/astrollama"
+ENCODER_MAX_LENGTH = 512
 
 # File for saving the UATs in json format
 UATS_JSON = DATA_DIR / "output.json"

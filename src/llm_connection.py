@@ -3,9 +3,9 @@ import atexit
 import json
 import os
 import requests
-import config
 import hashlib
-from config import OLLAMA_TEMPERATURE
+from config import configure_ollama, OLLAMA_TEMPERATURE
+import config
 
 cache = dict()
 loaded = False
@@ -39,7 +39,6 @@ def save_to_cache(response, cache_key):
 def generate(prompt: str,
              num_predict: int = 256,
              cache_key: str = None) -> str:
-
     """
     Send a simple generate query to the Ollama API.
 
@@ -49,6 +48,7 @@ def generate(prompt: str,
         cache_key: key where to save the LLM's response in the cache.
                    By default, a key is generated from the prompt.
     """
+    configure_ollama()
     load_cache()
     if not cache_key:
         cache_key = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
