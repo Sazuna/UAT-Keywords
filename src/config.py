@@ -115,8 +115,8 @@ ENCODER_MAX_LENGTH = 512
 UATS_JSON = DATA_DIR / "output.json"
 
 # File for saving the UAT's embeddings
-UATS_EMBEDDINGS = CACHE_DIR / f"{SENTENCE_TRANSFORMERS_MODEL.replace('/', '-')}_embeddings.npy"
+LLM_UATS_EMBEDDINGS_FILE = CACHE_DIR / f"{SENTENCE_TRANSFORMERS_MODEL.replace('/', '-')}_embeddings.npy"
 
 # LLM computation result files
-EMBEDDING_LLM = "all-minilm"
-LLM_EMBEDDINGS_FILE = CACHE_DIR / f"llm_embeddings_{EMBEDDING_LLM}.npy"
+EMBEDDING_LLM = "all-minilm:latest"
+BERT_UATS_EMBEDDINGS_FILE = CACHE_DIR / f"llm_embeddings_{EMBEDDING_LLM}.pkl"

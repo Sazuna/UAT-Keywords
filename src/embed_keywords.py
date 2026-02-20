@@ -8,7 +8,7 @@ from time import time
 from rdflib import SKOS, DCTERMS
 import encoder
 from llm_connection import encode as llm_encode
-from config import UATS_JSON, LLM_EMBEDDINGS_FILE
+from config import UATS_JSON, LLM_UATS_EMBEDDINGS_FILE
 
 ### AllMiniLM (test)
 from sentence_transformers import SentenceTransformer
@@ -104,8 +104,9 @@ def main():
     # embeddings_llm = [llm_encode(uat_str) for uat_str in uats_str]
     embeddings_llm = llm_encode(uats_str)
     print(type(embeddings_llm))
-    embeddings_llm = np.ndarray(embeddings_llm)
-    np.save(LLM_EMBEDDINGS_FILE, embeddings_llm)
+    embeddings_llm = np.asarray(embeddings_llm, dtype = np.float32)
+    print(embeddings_llm.shape)
+    np.save(LLM_UATS_EMBEDDINGS_FILE, embeddings_llm)
 
 
 if __name__ == "__main__":
