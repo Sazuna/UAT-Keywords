@@ -18,7 +18,7 @@ OUTPUT_DIR = ROOT / "src" / "output"
 USERNAME = os.environ.get("USER") or os.environ.get("USERNAME") or os.getlogin()
 if "SSH_CONNECTION" in os.environ or "SSH_CLIENT" in os.environ:
     # tycho
-    CACHE_DIR = Path("/data") / USERNAME / "cache"
+    CACHE_DIR = Path("/scratch") / USERNAME / "cache"
     # TMP_DIR = Path("/scratch") / USERNAME / "tmp"
 else:
     # local
@@ -108,15 +108,16 @@ ALLOW_BROAD_NARROW_MATCH = False # This will add difficulty to the classificatio
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["HF_HOME"] = str(CACHE_DIR / "huggingface" ) # Must import before transformers
-SENTENCE_TRANSFORMERS_MODEL = "adsabs/astroBERT" # "UniverseTBD/astrollama"
-ENCODER_MAX_LENGTH = 512
 
 # File for saving the UATs in json format
 UATS_JSON = DATA_DIR / "output.json"
+UATS_LABELS_JSON = DATA_DIR / "uats_labels.json"
 
+BERT_MODEL = "adsabs/astroBERT" # "UniverseTBD/astrollama"
+ENCODER_MAX_LENGTH = 512
 # File for saving the UAT's embeddings
-LLM_UATS_EMBEDDINGS_FILE = CACHE_DIR / f"{SENTENCE_TRANSFORMERS_MODEL.replace('/', '-')}_embeddings.npy"
 
 # LLM computation result files
-EMBEDDING_LLM = "all-minilm:latest"
+EMBEDDING_LLM = "nomic-embed-text"# "all-minilm:latest"
 BERT_UATS_EMBEDDINGS_FILE = CACHE_DIR / f"llm_embeddings_{EMBEDDING_LLM}.pkl"
+BERT_UATS_EMBEDDINGS_FILE = CACHE_DIR / "embeddings_astrobert.npy"

@@ -10,9 +10,9 @@ from collections import defaultdict, Counter
 from typing import Iterable
 import regex
 import matplotlib.pyplot as plt
-from encoder import encode_batch
+from encoder import astrobert_encode
 
-from config import UATS_EMBEDDINGS, UATS_JSON
+from config import BERT_UATS_EMBEDDINGS_FILE, UATS_LABELS_JSON
 
 
 from sentence_transformers import SentenceTransformer
@@ -28,20 +28,25 @@ def print(*string, force = False):
 
 
 # Embeddings
-with open(UATS_EMBEDDINGS, "rb") as file:
-    uat_embeddings = np.load(file)
+with open(BERT_UATS_EMBEDDINGS_FILE, "rb") as file:
+    uat_embeddings = np.load(file, allow_pickle = True)
     # Normalize for better performance
     uat_embeddings = uat_embeddings / np.linalg.norm(uat_embeddings, axis=1, keepdims=True)
 
 # UATs informations
-with open(UATS_JSON, "r") as file:
+with open(UATS_LABELS_JSON, "r") as file:
     uat_labels = json.load(file)
 
 class UatUtils():
-    def get_uat_label(idx: int):
-        return uat_labels[str(int(idx))][1]
+    def get_uat(idx: int):
+        idx = str(int(idx))
+        return uat_labels[idx]
 
-    def get_and_print_top_labels(top_idx: list[int]) -> list[str]:
+
+    def get_uat_label(idx: int):
+        return UatUtils.get_uat(idx)[1]
+
+    def get_and_print_top_k_keywords(top_idx: list[int]) -> list[str]:
         """
         Return and print top_k keywords.
 
@@ -50,12 +55,12 @@ class UatUtils():
         """
         labels = []
         for rank, top_id in enumerate(top_idx):
-            print(f"Top {rank + 1}: ", top_id, force = True)
-            uat_info = uat_labels[str(int(top_id))]
+            print(f"Top {rank + 1}: ", top_id, force = False)
+            uat_info = UatUtils.get_uat(top_id)
             print("UAT info:", uat_info)
             uat_uri = uat_info[0]
             uat_label = uat_info[1]
-            print(uat_uri, uat_label, force = True)
+            print(uat_uri, uat_label, force = False)
             labels.append(uat_label)
         return labels
 
@@ -138,9 +143,10 @@ class Reader():
                     doc[state] += line.removeprefix(prefix).strip() + ' '
 
             for doi, doc in all_docs.items():
-                doc_str = doc.get("title", "") + doc.get("abstract", "")
+                doc_str = doc.get("title", "") + '.' + doc.get("abstract", "")
                 keywords = doc.get("keywords", "")
-                yield doi, doc_str, keywords
+                title = doc.get("title", "")
+                yield doi, doc_str, keywords, title
 
 
     def __iter__(self):
@@ -154,11 +160,12 @@ class DocumentProcesser():
     def __init__(self,
                  doi: str,
                  doc_str: str,
-                 papers_keywords: str):
+                 papers_keywords: str,
+                 title: str):
         self._doi = doi
         self._doc_str = doc_str
         self._papers_keywords = papers_keywords
-        self._candidate_keywords = []
+        self._title = title
 
 
     ### Iterate over sentences ###
@@ -181,20 +188,23 @@ class DocumentProcesser():
 
 
     def process(self):
-        top_k = 30
+        top_k = 10
         all_labels_by_sentences = []
-        for txt in self():
-            query_emb = model.encode(txt)
-            query_emb = query_emb / np.linalg.norm(query_emb)
+        query_embs = astrobert_encode([txt for txt in self]) # model.encode(txt)
+        query_embs = query_embs / np.linalg.norm(query_embs, axis=1, keepdims=True)
+        keywords_score_by_batch = defaultdict(float)
+        for query_emb in query_embs:
             scores = uat_embeddings @ query_emb
             if PLOT:
                 self.plot_top_k_curve(top_k = top_k, scores = scores)
             top_idx = self.get_top_idx(top_k = top_k, scores = scores)
+            for idx, score in zip(top_idx, scores):
+                keywords_score_by_batch[idx] += score
             # Find clusters on different levels
             self.graph_clusters(top_idx)
-            labels = UatUtils.get_top_labels(top_idx)
-            affixes_counts = self.get_affixes_counts(keywords = labels)
-            print(affixes_counts, force = True)
+            keywords = UatUtils.get_and_print_top_k_keywords(top_idx)
+            affixes_counts = self.get_affixes_counts(keywords = keywords)
+            # print(affixes_counts, force = True)
             uris, labels, broaders, narrowers, relateds = UatUtils.get_top_infos(top_idx)
             # 1-level relations between entities
             counts, counts_sum = self.count_relations(top_idx,
@@ -202,15 +212,21 @@ class DocumentProcesser():
                                                       narrowers,
                                                       [], # relateds
                                                       )
+        print(self._doi, self._title, force = True)
+        bests_idx = sorted(keywords_score_by_batch.items(), key = lambda x: x[1], reverse = True)
+        print(bests_idx, force = True)
+        bests_keywords = [UatUtils.get_uat_label(idx) for idx, _ in bests_idx]
+        print(bests_keywords, force = True)
+
 
     ### Functions to clusterize ###
-    def get_affixes_counts(self) -> dict[int]:
+    def get_affixes_counts(self,
+                           keywords: list[str]) -> dict[int]:
         """
         Remove keywords that are suffixes or prefixes of another keyword from the list.
         Count the amount of prefixes and suffixes of each word in the initial list.
         The output is a count of clusters by affixes, keeping the longest labels.
         """
-        keywords = self._candidate_keywords
         counts = dict()
         for keyword in keywords:
             counts[keyword] = 1
@@ -270,9 +286,11 @@ class DocumentProcesser():
         paths = []
         for idx in top_idx:
             # Find path to root
-            label = uat_labels[str(idx)][1]
+            uat_info = UatUtils.get_uat(idx)
+            print(uat_info)
+            label = uat_info[1] # uat_labels[str(idx)][1]
             path = [(int(idx), label)]
-            broaders = uat_labels[str(idx)][2] # broader
+            broaders = uat_info[2] # broader
             while broaders:
                 broader = broaders[0]
                 label = uat_labels[str(broader)][1]
@@ -307,7 +325,8 @@ class DocumentProcesser():
         plt.show()
 
 
-    def get_top_idx(top_k: int,
+    def get_top_idx(self,
+                    top_k: int,
                     scores: np.array):
         """
         Returns top_k keywords idx
@@ -330,7 +349,7 @@ class DocumentProcesser():
         labels = []
         for rank, (top_id, top_score) in enumerate(zip(top_idx, top_scores)):
             print(f"Top {rank + 1}: ", top_id, top_score)
-            uat_info = uat_labels[str(int(top_id))]
+            uat_info = UatUtils.get_uat(top_id)# uat_labels[str(int(top_id))]
             print("UAT info:", uat_info)
             uat_uri = uat_info[0]
             uat_label = uat_info[1]
@@ -353,13 +372,13 @@ class DocumentProcesser():
 
         counts = counts.sum(axis = 0)
         print(counts)
+        return labels
 
 
 def main():
 
-    for doi, doc_str, papers_keywords in Reader():
-        print(doi)
-        doc = DocumentProcesser(doi, doc_str, papers_keywords)
+    for doi, doc_str, papers_keywords, title in Reader():
+        doc = DocumentProcesser(doi, doc_str, papers_keywords, title)
         doc.process()
         continue
         print("----------------------------------------------")

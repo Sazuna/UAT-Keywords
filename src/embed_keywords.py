@@ -8,11 +8,7 @@ from time import time
 from rdflib import SKOS, DCTERMS
 import encoder
 from llm_connection import encode as llm_encode
-from config import UATS_JSON, LLM_UATS_EMBEDDINGS_FILE
-
-### AllMiniLM (test)
-from sentence_transformers import SentenceTransformer
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+from config import UATS_JSON, UATS_LABELS_JSON, BERT_UATS_EMBEDDINGS_FILE, CACHE_DIR
 
 def main():
     with open(UATS_JSON, "r") as file:
@@ -85,29 +81,13 @@ def main():
         for i, broader in enumerate(broaders):
             broaders[i] = i_by_uri[broader]
 
-    """
-    start = time()
-    embeddings = model.encode(uats_str)
-    print(len(embeddings), "/ 2312 UATS (UAT 1 ignored)") # cat output.json | grep "uat" | sed -e "s/ *//g" | sed -e "s/[,:{\"]//g" | grep -e "^h.*" | sort | uniq | wc -l
-    print("Elapsed:", time() - start)
-    np.save(LLM_EMBEDDINGS_FILE, embeddings)
-    """
-
     # HuggingFace model (AstroLLaMa, AstroBERT)
-    """
     start = time()
-    embeddings_astrollama = encoder.encode_batch(uats_str)
+    embeddings = encoder.astrobert_encode(uats_str)
     print("Elapsed:", time() - start)
-    print(type(embeddings_astrollama))
-    np.save("embeddings_astrobert.npy", embeddings_astrollama)
-    """
-    # embeddings_llm = [llm_encode(uat_str) for uat_str in uats_str]
-    embeddings_llm = llm_encode(uats_str)
-    print(type(embeddings_llm))
-    embeddings_llm = np.asarray(embeddings_llm, dtype = np.float32)
-    print(embeddings_llm.shape)
-    np.save(LLM_UATS_EMBEDDINGS_FILE, embeddings_llm)
-
+    np.save(BERT_UATS_EMBEDDINGS_FILE, embeddings)
+    with open(UATS_LABELS_JSON, "w") as file:
+        json.dump(uat_labels, file, indent = 2)
 
 if __name__ == "__main__":
     main()

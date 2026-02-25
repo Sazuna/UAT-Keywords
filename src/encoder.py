@@ -1,55 +1,43 @@
-
 import torch
-### AstroLlama
-from transformers import AutoConfig, AutoModelForCausalLM
-from transformers import AutoTokenizer
-from config import SENTENCE_TRANSFORMERS_MODEL, ENCODER_MAX_LENGTH
+from transformers import BertModel, BertTokenizer
+from config import BERT_MODEL, ENCODER_MAX_LENGTH
+import numpy as np
 
-def encode_batch(texts: list[str]):
-    """
-    Get the encoded tensors of the entities' textual informations.
-    Those informations include the label, alternate labels, definition,
-    location...
-    Return a list of tensors for each entity.
+tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)
+model = BertModel.from_pretrained(BERT_MODEL)
 
-    Keyword arguments:
-    texts -- the list of entities' string representations to encode
-    """
-    ### Astrollama ###
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(device)
+model.to(device)
+model.eval()
 
-    # https://huggingface.co/UniverseTBD/astrollama
-    tokenizer = AutoTokenizer.from_pretrained(
-        pretrained_model_name_or_path = SENTENCE_TRANSFORMERS_MODEL,
-        use_fast = False
-        # device=device
-    )
-    model = AutoModelForCausalLM.from_pretrained(
-        pretrained_model_name_or_path=SENTENCE_TRANSFORMERS_MODEL,
-        # device_map="auto",
-        config = AutoConfig.from_pretrained(pretrained_model_name_or_path = SENTENCE_TRANSFORMERS_MODEL),
-        use_safetensors = True,
-        trust_remote_code = True,
-        # load_in_4bit = True,
-        torch_dtype = torch.bfloat16,
-        # device = device
-        )
-    print(f"Encoding the entities with {model}")
-    # no need to normalize embeddings as we compute a cosine similarity.
-    inputs = tokenizer(texts,
-                       return_tensors = "pt",
-                       return_token_type_ids = False,
-                       padding = True,
-                       truncation = True,
-                       max_length = ENCODER_MAX_LENGTH
-                      )
-    inputs.to(model.device)
-    return model(**inputs, output_hidden_states = True)
+def astrobert_encode(texts: list[str]) -> np.ndarray:
     """
-    # Bert:
-    return CosineSimilarityScorer.model.encode(texts,
-                                               batch_size = BATCH_SIZE,
-                                               show_progress_bar = True,
-                                               convert_to_tensor = True,
-                                               normalize_embeddings = False)
+    Encode a list of texts into embeddings using a BERT model.
+
+    Args:
+        texts (list[str]): list of input strings.
+
+    Returns:
+        np.ndarray: Array of shape (len(texts, hidden_size) with embeddings.
     """
+    batch_size = 32
+    all_embeddings = []
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i+batch_size]
+        encoded = tokenizer(batch,
+                            padding = True,
+                            truncation = True,
+                            return_tensors = "pt",
+                            max_length = ENCODER_MAX_LENGTH)
+        encoded = {k: v.to(device) for k, v in encoded.items()}
+
+        with torch.no_grad():
+            outputs = model(**encoded)
+            last_hidden_states = outputs.last_hidden_state
+            batch_embeddings = last_hidden_states[:, 0, :]
+            batch_embeddings = torch.nn.functional.normalize(batch_embeddings, p=2, dim=1)
+            all_embeddings.append(batch_embeddings.cpu().numpy())
+    all_embeddings = np.concatenate(all_embeddings, axis = 0)
+    return all_embeddings
+

@@ -59,7 +59,7 @@ def generate(prompt: str,
     response = requests.post(
         f'{config.OLLAMA_HOST}/api/generate',
         json={
-            'model': config.OLLAMA_MODEL,
+            'model': config.OLLAMA_MODEL_NAME,
             'prompt': prompt,
             'stream': False,
             'temperature': OLLAMA_TEMPERATURE,
@@ -91,6 +91,17 @@ def encode(text: list[str]):
             'input': text,
         }
     )
+    return response.json()["embedding"]
+    """
+    response = requests.post(
+        f'{config.OLLAMA_HOST}/api/generate',
+        json={
+            'model': config.OLLAMA_MODEL,#EMBEDDING_LLM,
+            'input': text,
+            'embedding': True
+        }
+    )
 
     response.raise_for_status()
-    return response.json()["embeddings"]
+    return response.json()["response"]
+    """
