@@ -11,6 +11,8 @@ from typing import Iterable
 import regex
 import matplotlib.pyplot as plt
 from encoder import astrobert_encode
+import spacy
+nlp = spacy.load("en_core_web_trf")
 
 from config import BERT_UATS_EMBEDDINGS_FILE, UATS_LABELS_JSON
 
@@ -33,9 +35,11 @@ with open(BERT_UATS_EMBEDDINGS_FILE, "rb") as file:
     # Normalize for better performance
     uat_embeddings = uat_embeddings / np.linalg.norm(uat_embeddings, axis=1, keepdims=True)
 
+
 # UATs informations
 with open(UATS_LABELS_JSON, "r") as file:
     uat_labels = json.load(file)
+
 
 class UatUtils():
     def get_uat(idx: int):
@@ -94,18 +98,19 @@ class UatUtils():
         Find the keyword's category (top hierarchy under root)
         """
         broaders = UatUtils.get_uat_broaders(uat_idx)
-        print("broaders:", broaders, force = True)
         if not broaders:
-            print(uat_idx, force = True)
             yield uat_idx
         else:
             for broader in broaders:
                 yield from UatUtils.get_uat_categories(broader)
 
 
+# Embeddings slices
+
+
 
 class Reader():
-    def read_pre9forADS(self) -> Iterable[tuple[str, str, str]]:
+    def read_pre9forADS(self) -> Iterable[tuple[str, str, str, str, str, str]]:
         with open("../corpus/pre9forADS_all.dat", "r") as file:
             lines = file.readlines()
             all_docs = dict()
@@ -166,9 +171,10 @@ class Reader():
                 keywords = doc.get("keywords", "").strip()
                 title = doc.get("title", "").strip()
                 abstract = doc.get("abstract", "").strip()
-                doc_str = title.strip() + '. ' + doc.get("abstract", "")  + '. ' + keywords
-                doc_str = regex.sub('\.+', '\.', doc_str)
-                yield doi, title, abstract, keywords, doc_str
+                journal = doc.get("journal", "") # Useful for categories filtering
+                doc_str = title.strip() + '. ' + doc.get("abstract", "")  + '. ' + keywords + '. ' + journal.split("edited")[0]
+                doc_str = regex.sub(r'\.+', '.', doc_str)
+                yield doi, title, abstract, keywords, journal, doc_str
 
 
     def __iter__(self):
@@ -184,11 +190,13 @@ class DocumentProcesser():
                  title: str,
                  abstract: str,
                  papers_keywords: str,
+                 journal: str,
                  doc_str: str):
         self._doi = doi
         self._title = title
         self._abstract = abstract
         self._papers_keywords = papers_keywords
+        self._journal = journal
         self._doc_str = doc_str
 
 
@@ -208,6 +216,16 @@ class DocumentProcesser():
         sentences = self.sentencize()
         return zip(sentences[:-1], sentences[1:])
 
+
+    def get_noun_chunks(self) -> list[str]:
+        """
+        Apply spacy to the string representation of this document
+        """
+        doc = nlp(self._doc_str)
+        noun_chunks = [chunk.text for chunk in doc.noun_chunks]
+        return noun_chunks
+
+
     def __iter__(self):
         #for x in self.sentencize():
         #    yield x
@@ -215,9 +233,12 @@ class DocumentProcesser():
 
 
     def process(self):
-        top_k = 3
+        top_k = 10
         all_labels_by_sentences = []
-        query_embs = astrobert_encode([txt for txt in self]) # model.encode(txt)
+        noun_chunks = self.get_noun_chunks()
+        noun_chunks_str = ' '.join(noun_chunks)
+        query_embs = astrobert_encode([noun_chunks_str])
+        # query_embs = astrobert_encode([txt for txt in self]) # model.encode(txt)
         query_embs = query_embs / np.linalg.norm(query_embs, axis=1, keepdims=True)
         keywords_score_by_batch = defaultdict(float)
         for query_emb in query_embs:
@@ -247,6 +268,7 @@ class DocumentProcesser():
                 print(uat_category, category_label, force = True)
         bests_keywords = [UatUtils.get_uat_label(idx) for idx, _ in bests_idx]
         print(bests_keywords, force = True)
+
 
 
     ### Functions to clusterize ###
@@ -404,11 +426,21 @@ class DocumentProcesser():
         print(counts)
         return labels
 
+    def category_compatible_with_journal(self,
+                                         category: str) -> bool:
+        """
+        Check if a category (str) of a keyword is compatible with the journal
+        of this paper
+        """
+        category = category.lower()
+        category = regex.sub("physics", "", category)
+
+
 
 def main():
 
-    for doi, title, abstract, papers_keywords, doc_str in Reader():
-        doc = DocumentProcesser(doi, title, abstract, papers_keywords, doc_str)
+    for doi, title, abstract, papers_keywords, journal, doc_str in Reader():
+        doc = DocumentProcesser(doi, title, abstract, papers_keywords, journal, doc_str)
         doc.process()
         continue
         print("----------------------------------------------")
