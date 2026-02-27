@@ -46,6 +46,11 @@ class UatUtils():
     def get_uat_label(idx: int):
         return UatUtils.get_uat(idx)[1]
 
+
+    def get_uat_broaders(idx: int):
+        return UatUtils.get_uat(idx)[2]
+
+
     def get_and_print_top_k_keywords(top_idx: list[int]) -> list[str]:
         """
         Return and print top_k keywords.
@@ -82,6 +87,21 @@ class UatUtils():
             narrowers.append(uat_info[3])
             relateds.append(uat_info[4])
         return uris, labels, broaders, narrowers, relateds
+
+
+    def get_uat_categories(uat_idx: np.int64):
+        """
+        Find the keyword's category (top hierarchy under root)
+        """
+        broaders = UatUtils.get_uat_broaders(uat_idx)
+        print("broaders:", broaders, force = True)
+        if not broaders:
+            print(uat_idx, force = True)
+            yield uat_idx
+        else:
+            for broader in broaders:
+                yield from UatUtils.get_uat_categories(broader)
+
 
 
 class Reader():
@@ -143,10 +163,12 @@ class Reader():
                     doc[state] += line.removeprefix(prefix).strip() + ' '
 
             for doi, doc in all_docs.items():
-                doc_str = doc.get("title", "") + '.' + doc.get("abstract", "")
-                keywords = doc.get("keywords", "")
-                title = doc.get("title", "")
-                yield doi, doc_str, keywords, title
+                keywords = doc.get("keywords", "").strip()
+                title = doc.get("title", "").strip()
+                abstract = doc.get("abstract", "").strip()
+                doc_str = title.strip() + '. ' + doc.get("abstract", "")  + '. ' + keywords
+                doc_str = regex.sub('\.+', '\.', doc_str)
+                yield doi, title, abstract, keywords, doc_str
 
 
     def __iter__(self):
@@ -159,13 +181,15 @@ class DocumentProcesser():
     """
     def __init__(self,
                  doi: str,
-                 doc_str: str,
+                 title: str,
+                 abstract: str,
                  papers_keywords: str,
-                 title: str):
+                 doc_str: str):
         self._doi = doi
-        self._doc_str = doc_str
-        self._papers_keywords = papers_keywords
         self._title = title
+        self._abstract = abstract
+        self._papers_keywords = papers_keywords
+        self._doc_str = doc_str
 
 
     ### Iterate over sentences ###
@@ -173,22 +197,25 @@ class DocumentProcesser():
         """
         Cut by sentences to extract sub-categories.
         """
-        return [s.strip() for s in regex.split(r"\.|\?|\!|", self._doc_str) if s.strip()]
+        return [s.strip() for s in regex.split(r"\.|\?|\!", self._doc_str) if s.strip()]
 
 
     def sentencize_with_overlap(self) -> list[tuple[str]]:
         """
         Cut by sentences two by two to extract sub-categories.
+        FIXME the first and last sentences are under represented
         """
         sentences = self.sentencize()
         return zip(sentences[:-1], sentences[1:])
 
     def __iter__(self):
-        return self.sentencize_with_overlap()
+        #for x in self.sentencize():
+        #    yield x
+        yield self._doc_str
 
 
     def process(self):
-        top_k = 10
+        top_k = 3
         all_labels_by_sentences = []
         query_embs = astrobert_encode([txt for txt in self]) # model.encode(txt)
         query_embs = query_embs / np.linalg.norm(query_embs, axis=1, keepdims=True)
@@ -212,9 +239,12 @@ class DocumentProcesser():
                                                       narrowers,
                                                       [], # relateds
                                                       )
-        print(self._doi, self._title, force = True)
+        print(self._doi, self._title, self._doc_str, self._papers_keywords, force = True)
         bests_idx = sorted(keywords_score_by_batch.items(), key = lambda x: x[1], reverse = True)
-        print(bests_idx, force = True)
+        for idx, score in bests_idx:
+            for uat_category in UatUtils.get_uat_categories(idx):
+                category_label = UatUtils.get_uat_label(uat_category)
+                print(uat_category, category_label, force = True)
         bests_keywords = [UatUtils.get_uat_label(idx) for idx, _ in bests_idx]
         print(bests_keywords, force = True)
 
@@ -377,8 +407,8 @@ class DocumentProcesser():
 
 def main():
 
-    for doi, doc_str, papers_keywords, title in Reader():
-        doc = DocumentProcesser(doi, doc_str, papers_keywords, title)
+    for doi, title, abstract, papers_keywords, doc_str in Reader():
+        doc = DocumentProcesser(doi, title, abstract, papers_keywords, doc_str)
         doc.process()
         continue
         print("----------------------------------------------")
