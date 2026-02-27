@@ -10,7 +10,7 @@ import encoder
 from llm_connection import encode as llm_encode
 from config import UATS_JSON, UATS_LABELS_JSON, BERT_UATS_EMBEDDINGS_FILE, CACHE_DIR
 
-def main():
+def main(only_label: bool = False):
     with open(UATS_JSON, "r") as file:
         uats = json.load(file)
 
@@ -53,8 +53,12 @@ def main():
             value = uat.get(p, "")
             if value:
                 if p == str(SKOS.scopeNote):
+                    if only_label:
+                        continue
                     uat_str += "Scope: "
                 elif p == str(SKOS.example):
+                    if only_label:
+                        continue
                     uat_str += "Examples: "
                 elif p == str(SKOS.prefLabel):
                     label = value
@@ -67,7 +71,7 @@ def main():
                 elif p == str(SKOS.related):
                     related = value
                     continue
-                uat_str += '; '.join(value) + '. '
+                uat_str += ' '.join(value)
         uat_labels[i] = [key, label[0], broader, narrower, related]
         uat_str = uat_str.strip()
         uat_str = uat_str.replace('..', '.')
@@ -90,4 +94,4 @@ def main():
         json.dump(uat_labels, file, indent = 2)
 
 if __name__ == "__main__":
-    main()
+    main(only_label = True)
