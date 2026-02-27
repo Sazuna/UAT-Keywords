@@ -11,10 +11,10 @@ import atexit
 import asyncio
 
 # directories
-ROOT = Path(__file__).parent.parent
+ROOT = Path(__file__).parent.parent.parent
 DATA_DIR = ROOT / "corpus"
 CONF_DIR = ROOT / "conf"
-OUTPUT_DIR = ROOT / "src" / "output"
+OUTPUT_DIR = ROOT / "src" / "AstroBERT" / "output"
 USERNAME = os.environ.get("USER") or os.environ.get("USERNAME") or os.getlogin()
 if "SSH_CONNECTION" in os.environ or "SSH_CLIENT" in os.environ:
     # tycho
