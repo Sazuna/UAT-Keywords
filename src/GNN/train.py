@@ -6,6 +6,7 @@ document → nœuds d'ontologie.
 
 import torch
 import torch.nn as nn
+import math
 from torch.utils.data import Dataset, DataLoader, random_split
 from torch_geometric.data import Data
 from typing import List, Tuple, Dict
@@ -22,11 +23,11 @@ from model import GNNOntologyClassifier
 
 class DocumentOntologyDataset(Dataset):
     """
-    Chaque exemple = (embedding_document, label_vector_multi_hot).
+    Each example = (document_embedding, label_vector_multi_hot).
 
     Args:
-        doc_embeddings : [D, bert_dim]   embeddings des documents (pré-calculés)
-        labels_multihot: [D, N]          vecteur multi-hot sur les N nœuds
+        doc_embeddings : [D, bert_dim]   documents embeddings (pre-computed)
+        labels_multihot: [D, N]          multi-hot vectors of the N nodes
     """
 
     def __init__(self, doc_embeddings: torch.Tensor, labels_multihot: torch.Tensor):
@@ -96,6 +97,7 @@ def evaluate(
         for doc_emb, labels in loader:
             doc_emb = doc_emb.to(device)
             logits  = model(doc_emb, x, edge_index, edge_type)
+            labels = labels.to(device)
             #preds   = (torch.sigmoid(logits) >= threshold).cpu().numpy()
             
             # ---- get top_k preds -------
@@ -153,27 +155,24 @@ def train(
     graph_edge_index  = graph.edge_index.to(device)
     graph_edge_type   = graph.edge_type.to(device)
 
-    # BCE avec pondération des positifs (souvent rares en multi-label)
+    # BCE with positive class weighting (multi-label)
     # num_nodes = graph.num_nodes
-    # pos_weight = torch.ones(num_nodes, device=device) * pos_weight_factor
-    # Better do:
-
+    # pos_weight = torch.ones(num_nodes, device=device) # * pos_weight_factor
+    """
     num_nodes = graph.num_nodes
-
     pos_counts = torch.zeros(num_nodes)
     total_samples = 0
-
     for _, y in train_ds:
         pos_counts += y
         total_samples += 1
 
     neg_counts = total_samples - pos_counts
-
     pos_weight = neg_counts / (pos_counts + 1e-6)
     pos_weight = pos_weight.to(device)
-    print("pos_weight:", pos_weight)
+    #print("pos_weight:", pos_weight)
+    """
 
-    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+    criterion = nn.BCEWithLogitsLoss()#pos_weight=pos_weight)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -181,7 +180,7 @@ def train(
     )
 
     best_f1 = 0.0
-    best_val_loss = 1.0
+    best_val_loss = math.inf
 
     for epoch in range(1, epochs + 1):
         model.train()

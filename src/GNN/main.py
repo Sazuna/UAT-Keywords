@@ -1,7 +1,7 @@
 """
 main.py
-Point d'entrée : charge l'ontologie, vectorise les documents,
-entraîne le GNN et effectue une inférence de démonstration.
+
+Load the UATs ontology, vectorize documents, train GNN and infer on our pre-print corpus.
 """
 
 import torch
@@ -26,8 +26,8 @@ CORPUS_PATH   = ADS_CORPUS_DIR # can use ADS_HELIOPHYSICS_CORPUS_DIR for HP-only
 DEVICE        = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Hyperparameters
-RGCN_HIDDEN   = 512
-RGCN_OUT      = 256
+RGCN_HIDDEN   = 256
+RGCN_OUT      = 128
 NUM_LAYERS    = 2     # smoothing of the representations
 DROPOUT       = 0.3
 EPOCHS        = 10
