@@ -117,7 +117,7 @@ def main():
                     print("Getting papers for:", uat, uat_label)
                     uat = uat.split("/")[-1]
                     get_results(uat, uat_label, corpus_dir)
-    download(HP_CATEGORIES, ADS_HELIO_CORPUS_DIR)
+    # download(HP_CATEGORIES, ADS_HELIO_CORPUS_DIR)
     download(ALL_CATEGORIES, ADS_CORPUS_DIR)
 
 if __name__ == "__main__":
