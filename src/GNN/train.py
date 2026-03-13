@@ -66,7 +66,7 @@ def build_multihot(
                 multihot[i, node2idx[uri]] = 1.0
                 # TODO label smoothing (https://www.mdpi.com/2079-9292/13/15/2944)
             else:
-                print(f"[Warning] URI inconnue dans node2idx : {uri}")
+                print(f"[Warning] Unknown URI in node2idx : {uri}")
     return multihot
 
 
@@ -106,7 +106,6 @@ def evaluate(
 
             val_loss = criterion(logits, labels)
             total_val_loss += val_loss.item()
-            num_batches += 1
 
             all_preds.append(preds)
             all_labels.append(labels.numpy())
@@ -121,7 +120,7 @@ def evaluate(
         "f1_macro":        f1_score(y_true, y_pred, average="macro", zero_division=0),
         "precision_micro": precision_score(y_true, y_pred, average="micro", zero_division=0),
         "recall_micro":    recall_score(y_true, y_pred, average="micro", zero_division=0),
-        "validation_loss": val_loss / num_batches
+        "validation_loss": avg_val_loss
     }
 
 
