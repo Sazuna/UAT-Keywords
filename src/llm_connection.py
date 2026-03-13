@@ -4,7 +4,7 @@ import json
 import os
 import requests
 import hashlib
-from config import configure_ollama, OLLAMA_TEMPERATURE, EMBEDDING_LLM
+from config import configure_ollama, OLLAMA_TEMPERATURE, BERT_MODEL
 import config
 
 cache = dict()
@@ -87,7 +87,7 @@ def encode(text: list[str]):
     response = requests.post(
         f'{config.OLLAMA_HOST}/api/embed',
         json={
-            'model': EMBEDDING_LLM,
+            'model': BERT_MODEL,
             'input': text,
         }
     )
