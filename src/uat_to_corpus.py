@@ -2,12 +2,11 @@
 """
 Transforms UATs into text chunks
 """
-import atexit
 import pathlib
 from rdflib import Graph, SKOS, OWL, DCTERMS, Literal, XSD
 from collections import defaultdict
-from llm_connection import generate, save_cache
-from config import DATA_DIR, UATS_JSON
+from llm_connection import generate
+from config import CORPUS_DIR, UATS_JSON
 import json
 
 
@@ -71,4 +70,4 @@ def main(uat_file: pathlib.Path):
 
 
 if __name__ == "__main__":
-    main(DATA_DIR / "UAT_v6.0.0.rdf")
+    main(CORPUS_DIR / "UAT_v6.0.0.rdf")

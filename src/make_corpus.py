@@ -6,9 +6,10 @@ import json
 import os
 import regex
 import requests
+import uat_to_corpus
 from urllib.parse import urlencode
 from rdflib import SKOS
-from config import UATS_JSON, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
+from config import CORPUS_DIR, UATS_JSON, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
 
 
 # Make a query with one keyword
@@ -31,6 +32,9 @@ ALL_CATEGORIES = {#"104":  "Astrophysical processes",
 
 UAT_NAMESPACE = "http://astrothesaurus.org/uat/"
 
+# Load UATs
+UAT_ONTOLOGY = "UAT_v6.0.0.rdf"
+uat_to_corpus.main(CORPUS_DIR / UAT_ONTOLOGY)
 with open (UATS_JSON, "r") as file:
     uat_labels = json.load(file)
 base_ads_query = lambda x: "keyword:\"{}\"".format("\",\"".join(x))
