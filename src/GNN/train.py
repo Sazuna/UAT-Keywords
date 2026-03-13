@@ -1,0 +1,252 @@
+"""
+train.py
+Dataset + boucle d'entraînement pour la classification multi-label
+document → nœuds d'ontologie.
+"""
+
+import torch
+import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader, random_split
+from torch_geometric.data import Data
+from typing import List, Tuple, Dict
+from config import THRESHOLD
+import numpy as np
+from sklearn.metrics import f1_score, precision_score, recall_score
+
+from model import GNNOntologyClassifier
+
+
+# ─────────────────────────────────────────────
+# Dataset
+# ─────────────────────────────────────────────
+
+class DocumentOntologyDataset(Dataset):
+    """
+    Chaque exemple = (embedding_document, label_vector_multi_hot).
+
+    Args:
+        doc_embeddings : [D, bert_dim]   embeddings des documents (pré-calculés)
+        labels_multihot: [D, N]          vecteur multi-hot sur les N nœuds
+    """
+
+    def __init__(self, doc_embeddings: torch.Tensor, labels_multihot: torch.Tensor):
+        assert doc_embeddings.shape[0] == labels_multihot.shape[0]
+        self.doc_emb = doc_embeddings.float()
+        self.labels  = labels_multihot.float()
+
+    def __len__(self):
+        return len(self.doc_emb)
+
+    def __getitem__(self, idx):
+        return self.doc_emb[idx], self.labels[idx]
+
+
+def build_multihot(
+    annotations: List[List[str]],
+    node2idx: Dict[str, int],
+) -> torch.Tensor:
+    """
+    Convert a list of annotations (URIs) into multi-hot matrix.
+
+    Args:
+        annotations : list of lists of URIs (one per document)
+        node2idx    : mapping URI → index
+
+    Returns:
+        tensor [D, N]
+    """
+    N = len(node2idx)
+    D = len(annotations)
+    multihot = torch.zeros(D, N)
+    for i, ann_list in enumerate(annotations):
+        if len(ann_list) == 0:
+            print("No annotation for document.")
+        for uri in ann_list:
+            if uri in node2idx:
+                multihot[i, node2idx[uri]] = 1.0
+            else:
+                print(f"[Warning] URI inconnue dans node2idx : {uri}")
+    return multihot
+
+
+# ─────────────────────────────────────────────
+# Métriques
+# ─────────────────────────────────────────────
+
+def evaluate(
+    model: GNNOntologyClassifier,
+    loader: DataLoader,
+    graph: Data,
+    threshold: float = THRESHOLD,
+    device: str = "cpu",
+) -> Dict[str, float]:
+    model.eval()
+    all_preds, all_labels = [], []
+
+    x         = graph.x.to(device)
+    edge_index = graph.edge_index.to(device)
+    edge_type  = graph.edge_type.to(device)
+
+    with torch.no_grad():
+        for doc_emb, labels in loader:
+            doc_emb = doc_emb.to(device)
+            logits  = model(doc_emb, x, edge_index, edge_type)
+            preds   = (torch.sigmoid(logits) >= threshold).cpu().numpy()
+            all_preds.append(preds)
+            all_labels.append(labels.numpy())
+
+    y_pred = np.vstack(all_preds)
+    y_true = np.vstack(all_labels)
+
+    return {
+        "f1_micro":        f1_score(y_true, y_pred, average="micro", zero_division=0),
+        "f1_macro":        f1_score(y_true, y_pred, average="macro", zero_division=0),
+        "precision_micro": precision_score(y_true, y_pred, average="micro", zero_division=0),
+        "recall_micro":    recall_score(y_true, y_pred, average="micro", zero_division=0),
+    }
+
+
+# ─────────────────────────────────────────────
+# Training loop
+# ─────────────────────────────────────────────
+
+def train(
+    model: GNNOntologyClassifier,
+    graph: Data,
+    dataset: DocumentOntologyDataset,
+    epochs: int = 5,
+    batch_size: int = 16,
+    lr: float = 1e-3,
+    val_ratio: float = 0.15,
+    pos_weight_factor: float = 1.0,   # compensate desequilibrum multi-label (TODO remove this)
+    device: str = "cpu",
+    checkpoint_path: str = "best_model.pt",
+):
+    # Split train / val
+    val_size   = max(1, int(len(dataset) * val_ratio))
+    train_size = len(dataset) - val_size
+    train_ds, val_ds = random_split(dataset, [train_size, val_size])
+
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    val_loader   = DataLoader(val_ds,   batch_size=batch_size, shuffle=False)
+
+    model.to(device)
+    graph_x           = graph.x.to(device)
+    graph_edge_index  = graph.edge_index.to(device)
+    graph_edge_type   = graph.edge_type.to(device)
+
+    # BCE avec pondération des positifs (souvent rares en multi-label)
+    # num_nodes = graph.num_nodes
+    # pos_weight = torch.ones(num_nodes, device=device) * pos_weight_factor
+    # Better do:
+
+    num_nodes = graph.num_nodes
+
+    pos_counts = torch.zeros(num_nodes)
+    total_samples = 0
+
+    for _, y in train_ds:
+        pos_counts += y
+        total_samples += 1
+
+    neg_counts = total_samples - pos_counts
+
+    pos_weight = neg_counts / (pos_counts + 1e-6)
+    pos_weight = pos_weight.to(device)
+    print("pos_weight:", pos_weight)
+
+    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode="max", factor=0.5, patience=5
+    )
+
+    best_f1 = 0.0
+
+    for epoch in range(1, epochs + 1):
+        model.train()
+        total_loss = 0.0
+
+        for doc_emb, labels in train_loader:
+            doc_emb = doc_emb.to(device)
+            labels  = labels.to(device)
+
+            optimizer.zero_grad()
+            logits = model(doc_emb, graph_x, graph_edge_index, graph_edge_type)
+            loss   = criterion(logits, labels)
+            loss.backward()
+            nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            optimizer.step()
+            total_loss += loss.item()
+
+        avg_loss = total_loss / len(train_loader)
+
+        # Validation
+        metrics = evaluate(model, val_loader, graph, device=device)
+        f1 = metrics["f1_micro"]
+        scheduler.step(f1)
+
+        print(
+            f"Epoch {epoch:03d}/{epochs} | loss={avg_loss:.4f} | "
+            f"f1_micro={f1:.4f} | f1_macro={metrics['f1_macro']:.4f} | "
+            f"prec={metrics['precision_micro']:.4f} | recall={metrics['recall_micro']:.4f}"
+        )
+
+        if f1 > best_f1:
+            best_f1 = f1
+            torch.save(model.state_dict(), checkpoint_path)
+            print(f"  ✓ Meilleur modèle sauvegardé (f1={best_f1:.4f})")
+
+    print(f"\nTraining done. Best micro-F1: {best_f1:.4f}")
+    return best_f1
+
+
+# ─────────────────────────────────────────────
+# Inference
+# ─────────────────────────────────────────────
+
+@torch.no_grad()
+def predict(
+    model: GNNOntologyClassifier,
+    doc_embeddings: torch.Tensor,
+    graph: Data,
+    idx2node: Dict[int, str],
+    node_texts: List[str],
+    threshold: float = THRESHOLD,
+    top_k: int = None,
+    device: str = "cpu",
+) -> List[List[Tuple[str, str, float]]]:
+    """
+    For each document, return un aliste of (uri, label, score) sorted by score.
+
+    Args:
+        doc_embeddings : [D, bert_dim]
+        top_k          : if specified, return top_k nodes (ignore threshold)
+
+    Returns:
+        list of listes [(uri, label, score), ...]
+    """
+    model.eval().to(device)
+    x          = graph.x.to(device)
+    edge_index  = graph.edge_index.to(device)
+    edge_type   = graph.edge_type.to(device)
+
+    logits = model(doc_embeddings.to(device), x, edge_index, edge_type)  # [D, N]
+    probs  = torch.sigmoid(logits).cpu()
+
+    results = []
+    for i in range(probs.shape[0]):
+        p = probs[i]
+        if top_k is not None:
+            indices = torch.topk(p, k=top_k).indices.tolist()
+        else:
+            indices = (p >= threshold).nonzero(as_tuple=True)[0].tolist()
+
+        doc_results = sorted(
+            [(idx2node[j], node_texts[j], p[j].item()) for j in indices],
+            key=lambda x: x[2], reverse=True
+        )
+        results.append(doc_results)
+
+    return results
