@@ -5,7 +5,7 @@ entraîne le GNN et effectue une inférence de démonstration.
 """
 
 import torch
-from config import BERT_MODEL, THRESHOLD
+from config import BERT_MODEL, THRESHOLD, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
 from ontology_graph import OntologyGraph
 import corpus_loader
 from model import GNNOntologyClassifier
@@ -22,6 +22,7 @@ from train import (
 # ─────────────────────────────────────────────────────────────────────
 
 TURTLE_PATH   = "../../corpus/UAT_v6.0.0.rdf" # Input graph
+CORPUS_PATH   = ADS_CORPUS_DIR # can use ADS_HELIOPHYSICS_CORPUS_DIR for HP-only
 DEVICE        = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Hyperparameters
@@ -59,7 +60,8 @@ documents = []
 annotations = []
 
 reader = corpus_loader.Reader()
-for document, annotation in reader.read_heliophysics_corpus(ignore_kailas=False):
+for document, annotation in reader.read_corpus(ignore_kailas = False,
+                                               corpus_folder = CORPUS_PATH):
     documents.append(document)
     annotations.append(annotation)
 

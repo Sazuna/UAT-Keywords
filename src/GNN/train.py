@@ -64,6 +64,7 @@ def build_multihot(
         for uri in ann_list:
             if uri in node2idx:
                 multihot[i, node2idx[uri]] = 1.0
+                # TODO label smoothing (https://www.mdpi.com/2079-9292/13/15/2944)
             else:
                 print(f"[Warning] URI inconnue dans node2idx : {uri}")
     return multihot
@@ -77,23 +78,40 @@ def evaluate(
     model: GNNOntologyClassifier,
     loader: DataLoader,
     graph: Data,
+    criterion: nn.Module,
+    top_k: int = 5,
     threshold: float = THRESHOLD,
     device: str = "cpu",
 ) -> Dict[str, float]:
     model.eval()
     all_preds, all_labels = [], []
 
-    x         = graph.x.to(device)
+    x          = graph.x.to(device)
     edge_index = graph.edge_index.to(device)
     edge_type  = graph.edge_type.to(device)
+    
+    total_val_loss = 0
 
     with torch.no_grad():
         for doc_emb, labels in loader:
             doc_emb = doc_emb.to(device)
             logits  = model(doc_emb, x, edge_index, edge_type)
-            preds   = (torch.sigmoid(logits) >= threshold).cpu().numpy()
+            #preds   = (torch.sigmoid(logits) >= threshold).cpu().numpy()
+            
+            # ---- get top_k preds -------
+            topk = torch.topk(logits, top_k, dim=1)
+            preds = torch.zeros_like(logits)
+            preds.scatter_(1, topk.indices, 1)
+            # ------------------------------
+
+            val_loss = criterion(logits, labels)
+            total_val_loss += val_loss.item()
+            num_batches += 1
+
             all_preds.append(preds)
             all_labels.append(labels.numpy())
+
+    avg_val_loss = total_val_loss / len(loader)
 
     y_pred = np.vstack(all_preds)
     y_true = np.vstack(all_labels)
@@ -103,6 +121,7 @@ def evaluate(
         "f1_macro":        f1_score(y_true, y_pred, average="macro", zero_division=0),
         "precision_micro": precision_score(y_true, y_pred, average="micro", zero_division=0),
         "recall_micro":    recall_score(y_true, y_pred, average="micro", zero_division=0),
+        "validation_loss": val_loss / num_batches
     }
 
 
@@ -163,6 +182,7 @@ def train(
     )
 
     best_f1 = 0.0
+    best_val_loss = 1.0
 
     for epoch in range(1, epochs + 1):
         model.train()
@@ -183,20 +203,28 @@ def train(
         avg_loss = total_loss / len(train_loader)
 
         # Validation
-        metrics = evaluate(model, val_loader, graph, device=device)
+        metrics = evaluate(model, val_loader, graph, threshold=THRESHOLD, criterion=criterion, device=device)
         f1 = metrics["f1_micro"]
+        val_loss = metrics["validation_loss"]
         scheduler.step(f1)
 
         print(
-            f"Epoch {epoch:03d}/{epochs} | loss={avg_loss:.4f} | "
+            f"Epoch {epoch:03d}/{epochs} | training loss={avg_loss:.4f} | "
+            f"validation loss={metrics['validation_loss']:.4f} | "
             f"f1_micro={f1:.4f} | f1_macro={metrics['f1_macro']:.4f} | "
             f"prec={metrics['precision_micro']:.4f} | recall={metrics['recall_micro']:.4f}"
         )
 
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            torch.save(model.state_dict(), checkpoint_path)
+            print(f"  ✓ Best model saved (val loss={best_val_loss:.4f})")
+        """
         if f1 > best_f1:
             best_f1 = f1
             torch.save(model.state_dict(), checkpoint_path)
-            print(f"  ✓ Meilleur modèle sauvegardé (f1={best_f1:.4f})")
+            print(f"  ✓ Best model saved (f1={best_f1:.4f})")
+        """
 
     print(f"\nTraining done. Best micro-F1: {best_f1:.4f}")
     return best_f1

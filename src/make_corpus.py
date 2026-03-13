@@ -17,16 +17,16 @@ ADS_API_TOKEN = os.environ.get("ADS_API_TOKEN")
 # Categories of interest
 HP_CATEGORIES = {"2373": "Heliophysics"}
 
-ALL_CATEGORIES = {"104":  "Astrophysical processes",
-                  "343":  "Cosmology",
-                  "486":  "Exoplanet astronomy",
-                  "563":  "Galactic and extragalactic astronomy",
-                  "2373": "Heliophysics",
-                  "739":  "High energy astrophysics",
-                  "804":  "Interdisciplinary astronomy",
-                  "847":  "Interstellar medium",
-                  "1145": "Observational astronomy",
-                  "1529": "Solar system astronomy",
+ALL_CATEGORIES = {#"104":  "Astrophysical processes",
+                  #"343":  "Cosmology",
+                  #"486":  "Exoplanet astronomy",
+                  #"563":  "Galactic and extragalactic astronomy",
+                  #"2373": "Heliophysics",
+                  #"739":  "High energy astrophysics",
+                  #"804":  "Interdisciplinary astronomy",
+                  #"847":  "Interstellar medium",
+                  #"1145": "Observational astronomy",
+                  #"1529": "Solar system astronomy",
                   "1583": "Stellar astronomy"}
 
 UAT_NAMESPACE = "http://astrothesaurus.org/uat/"
@@ -66,7 +66,12 @@ def make_query(uat_idx, uat_label, rows: int = 1000):
 def get_results(uat_idx, uat_label, corpus_dir):
     response = requests.get("https://api.adsabs.harvard.edu/v1/search/query?{}".format(make_query(uat_idx, uat_label)), \
                         headers={'Authorization': 'Bearer ' + ADS_API_TOKEN})
-    response = response.json()["response"]
+    try:
+        response = response.json()["response"]
+    except requests.exception.JSONDecodeError:
+        print(response)
+        print("https://api.adsabs.harvard.edu/v1/search/query?{}".format(make_query(uat_idx, uat_label)))
+        exit()
     numFound = response["numFound"]
     numFoundExact = response["numFoundExact"]
     if not numFoundExact:

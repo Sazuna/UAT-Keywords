@@ -50,6 +50,8 @@ BERT_DOCS_EMBEDDINGS_FILE = CACHE_DIR / f"embeddings_{BERT_MODEL.replace('/', '-
 # Folder for saving the ADS HelioPhysics corpus
 ADS_HELIO_CORPUS_DIR = DATA_DIR / "ADS_HelioPhysics_corpus"
 ADS_HELIO_CORPUS_DIR.mkdir(parents = True, exist_ok = True)
+ADS_CORPUS_DIR = DATA_DIR / "ADS_corpus"
+ADS_CORPUS_DIR.mkdir(parents = True, exist_ok = True)
 
 # Our data file
 TEST_CORPUS_FILE = CORPUS_DIR / "pre9forADS_all_annotated.dat"

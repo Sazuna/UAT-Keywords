@@ -1,8 +1,9 @@
 import json
 import os
-from config import TEST_CORPUS_FILE, ADS_HELIO_CORPUS_DIR
+from config import TEST_CORPUS_FILE, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
 from tqdm import tqdm
 from typing import Iterable
+from pathlib import Path
 from collections import defaultdict
 
 from datasets import load_dataset
@@ -120,8 +121,9 @@ class Reader():
                 # yield bibcode, title, abstract, keywords, journal, uats
 
 
-    def read_heliophysics_corpus(self,
-                                 ignore_kailas: bool = False) -> Iterable[tuple]:
+    def read_corpus(self,
+                    ignore_kailas: bool = False,
+                    corpus_folder: Path = ADS_HELIO_CORPUS_DIR) -> Iterable[tuple]:
         """
         Load corpus collected on ADS. Yield tuples (doc_str, list_of_uats).
 
@@ -129,8 +131,8 @@ class Reader():
             ignore_kailas: ignore documents that are in the KAILAS training set.
         """
         total = 0
-        for filename in tqdm(os.listdir(ADS_HELIO_CORPUS_DIR)):
-            with open(ADS_HELIO_CORPUS_DIR / filename, "r") as file:
+        for filename in tqdm(sorted(os.listdir(corpus_folder))):
+            with open(corpus_folder / filename, "r") as file:
                 doc = json.load(file)
             abstract = doc["abstract"]
             keywords = doc["keywords"]
@@ -142,6 +144,6 @@ class Reader():
             total += 1
             document = Reader.Document(bibcode, title, None, abstract, keywords, None)
             yield document.text, document.uats
-        print(f"Total of documents in the heliophysics corpus: {total}")
+        print(f"Total of documents in the corpus: {total}")
         if ignore_kailas:
             print(f"Ignored documents that are in KAILAS training set: {ignored}")
