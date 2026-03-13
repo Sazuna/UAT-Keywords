@@ -12,17 +12,19 @@ import asyncio
 
 # directories
 ROOT = Path(__file__).parent.parent.parent
-DATA_DIR = ROOT / "corpus"
+CORPUS_DIR = ROOT / "corpus"
 CONF_DIR = ROOT / "conf"
 OUTPUT_DIR = ROOT / "src" / "AstroBERT" / "output"
 USERNAME = os.environ.get("USER") or os.environ.get("USERNAME") or os.getlogin()
 if "SSH_CONNECTION" in os.environ or "SSH_CLIENT" in os.environ:
     # tycho
     CACHE_DIR = Path("/scratch") / USERNAME / "cache"
+    DATA_DIR = Path("/scratch2") / USERNAME / "cache"
     # TMP_DIR = Path("/scratch") / USERNAME / "tmp"
 else:
     # local
     CACHE_DIR = ROOT / "cache"
+    DATA_DIR = ROOT / "corpus"
     # TMP_DIR = ROOT / "tmp"
 
 # mkdir
