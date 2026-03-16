@@ -6,11 +6,10 @@ Chargement de l'ontologie Turtle et construction du graphe PyTorch Geometric.
 import torch
 import re
 import pickle
-from rdflib import Graph, URIRef, Namespace
-from rdflib.namespace import SKOS, RDF, RDFS
+from rdflib import Graph, URIRef
+from rdflib.namespace import SKOS, RDF
 from torch_geometric.data import Data
 from transformers import AutoTokenizer, AutoModel
-from transformers import BertTokenizer, BertModel
 from typing import Dict, Tuple, List
 from pathlib import Path
 from config import BERT_UATS_EMBEDDINGS_FILE, BERT_DOCS_EMBEDDINGS_FILE
