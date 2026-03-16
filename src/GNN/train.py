@@ -72,9 +72,8 @@ def build_multihot(
 
 
 # ─────────────────────────────────────────────
-# Métriques
+# Metrics
 # ─────────────────────────────────────────────
-
 def evaluate(
     model: GNNOntologyClassifier,
     loader: DataLoader,
@@ -92,7 +91,8 @@ def evaluate(
     edge_type  = graph.edge_type.to(device)
     
     total_val_loss = 0
-
+    true_labels_by_doc = 0
+    pred_labels_by_doc = 0
     with torch.no_grad():
         for doc_emb, labels in loader:
             doc_emb = doc_emb.to(device)
@@ -104,15 +104,33 @@ def evaluate(
             topk = torch.topk(logits, top_k, dim=1)
             preds = torch.zeros_like(logits)
             preds.scatter_(1, topk.indices, 1)
+            #print(preds)
+            #print(preds.sum())
+            #print(preds.shape)
+            # ---- get top_k labels -------
+            # (if smoothed, convert back to onehot)
+            ### Fix ?
+            onehot = torch.zeros_like(labels)
+            for i in range(labels.shape[0]):
+                k = int(labels[i].sum().item())
+
+                if k > 0:
+                    topk = torch.topk(labels[i], k)
+                    onehot[i, topk.indices] = 1
             # ------------------------------
 
             val_loss = criterion(logits, labels)
             total_val_loss += val_loss.item()
 
+            pred_labels_by_doc += preds.sum() / preds.shape[0]
+            true_labels_by_doc += onehot.sum() / onehot.shape[0]
+
             all_preds.append(preds)
-            all_labels.append(labels.numpy())
+            all_labels.append(onehot.numpy())
 
     avg_val_loss = total_val_loss / len(loader)
+    pred_labels_by_doc /= len(loader)
+    true_labels_by_doc /= len(loader)
 
     y_pred = np.vstack(all_preds)
     y_true = np.vstack(all_labels)
@@ -122,7 +140,9 @@ def evaluate(
         "f1_macro":        f1_score(y_true, y_pred, average="macro", zero_division=0),
         "precision_micro": precision_score(y_true, y_pred, average="micro", zero_division=0),
         "recall_micro":    recall_score(y_true, y_pred, average="micro", zero_division=0),
-        "validation_loss": avg_val_loss
+        "validation_loss": avg_val_loss,
+        "true_labels_by_doc": true_labels_by_doc,
+        "pred_labels_by_doc": pred_labels_by_doc
     }
 
 
@@ -200,7 +220,7 @@ def train(
 
         avg_loss = total_loss / len(train_loader)
 
-        # Validation
+        # Validation if not smoothed labels
         metrics = evaluate(model, val_loader, graph, threshold=THRESHOLD, criterion=criterion, device=device)
         f1 = metrics["f1_micro"]
         val_loss = metrics["validation_loss"]
@@ -211,6 +231,10 @@ def train(
             f"validation loss={metrics['validation_loss']:.4f} | "
             f"f1_micro={f1:.4f} | f1_macro={metrics['f1_macro']:.4f} | "
             f"prec={metrics['precision_micro']:.4f} | recall={metrics['recall_micro']:.4f}"
+        )
+        print(
+            f"true labels by doc={metrics['true_labels_by_doc']:.4f} | "
+            f"pred labels by doc={metrics['pred_labels_by_doc']:.0f}"
         )
 
         if val_loss < best_val_loss:
