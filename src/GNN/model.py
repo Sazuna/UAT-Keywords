@@ -17,7 +17,7 @@ from torch_geometric.nn import RGCNConv
 
 class OntologyRGCN(nn.Module):
     """
-    R-GCN qui raffine les embeddings de nœuds de l'ontologie.
+    R-GCN that refines embeddings of the ontology's nodes
 
     Args:
         in_channels   : dim des features d'entrée (768 pour BERT-base)
@@ -40,14 +40,14 @@ class OntologyRGCN(nn.Module):
         super().__init__()
         self.dropout = dropout
 
-        # Projection initiale BERT → espace plus compact
+        # Initial BERT projection
         self.input_proj = nn.Sequential(
             nn.Linear(in_channels, hidden_channels),
             nn.LayerNorm(hidden_channels),
             nn.ReLU(),
         )
 
-        # Couches R-GCN
+        # R-GCN Layers
         self.convs = nn.ModuleList()
         self.norms = nn.ModuleList()
         dims = [hidden_channels] + [hidden_channels] * (num_layers - 1) + [out_channels]
@@ -60,12 +60,12 @@ class OntologyRGCN(nn.Module):
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor, edge_type: torch.Tensor) -> torch.Tensor:
         """
         Args:
-            x          : [N, in_channels]  features initiales des nœuds
+            x          : [N, in_channels]  initial node features
             edge_index : [2, E]
-            edge_type  : [E]  valeurs dans {0,1,2}
+            edge_type  : [E]  edge index in {0,1,2,3}
 
         Returns:
-            node_emb : [N, out_channels]  représentations raffinées
+            node_emb : [N, out_channels]  modified representations
         """
         h = self.input_proj(x)
 

@@ -160,9 +160,95 @@ class OntologyGraph:
         filename += f"{corpus_name}_{len(texts)}docs.pkl"
         filename = Path(filename)
         if filename.exists():
+            print("Loading embeddings from", filename)
             with open(filename, "rb") as file:
                 return pickle.load(file)
         embeds = self._embed_texts(texts, batch_size)
         with open(filename, "wb") as file:
             pickle.dump(embeds, file)
         return embeds
+
+
+    def labels_smoothing(self,
+                         labels_multihot: torch.Tensor,
+                         alpha: float = 0.9,
+                         steps: int = 2,
+                         edges: set[int] = {0, 1, 2, 3}) -> torch.Tensor:
+        """
+        Graph-based label smoothing (or label propagation / label spreading)
+
+        Y^{(t+1)} = \alpha Y + (1-\alpha) D^{-1} A Y^{(t)}
+        Y € R^DxN: multi-hot labels
+        A: adjacency matrix filtered by edge types
+        alpha: original label weight
+        t: propagation step
+
+        Args:
+            labels_multihot : [D, N] Multi-hot labels for each document.
+            # adj_matrix      : [N, N] Adjacency matrix of the ontology graph.
+            alpha           : float  Weight for original labels.
+            steps           : int    How many times should the labels be smoothed.
+        ex: if alpha = 0.9, new weight of 1.0 => 0.9, 0.1 is distributed equally to its neighbors
+
+        Returns
+            smoothed_labels : [D, N]
+        """
+        num_nodes = self.graph_data.num_nodes
+        edge_index = self.graph_data.edge_index
+        edge_type  = self.graph_data.edge_type
+
+        # ---- filter edges by type ----
+        mask = torch.zeros_like(edge_type, dtype=torch.bool)
+        for e in edges:
+            mask |= (edge_type == e)
+
+        filtered_edges = edge_index[:, mask]
+
+        adj_matrix = torch.zeros(
+            num_nodes,
+            num_nodes
+        )
+
+        adj_matrix[
+            filtered_edges[0],
+            filtered_edges[1],
+        ] = 1
+
+        # Degree matrix
+        deg = adj_matrix.sum(dim=1)
+
+        # Avoid division by zero
+        deg_inv = 1.0 / (deg + 1e-8)
+
+        # Normalize adjacency
+        adj_norm = adj_matrix * deg_inv.unsqueeze(1)
+
+        """
+        for _ in range(steps):
+            # Graph propagation
+            propagated = labels_multihot @ adj_norm
+
+            # Combine original + propagated
+            # "Learning with Local and Global Consistency" (Zhou et al., 2003)
+            labels_multihot = alpha * labels_multihot + (1 - alpha) * propagated
+        """
+        # ---- smoothing steps ----
+        """
+        # Version that keeps the original labels_multihot at each step
+        # Y^{(t+1)} = \alpha Y^{(0)} + (1-\alpha) Y^{(t)}A
+        Y = labels_multihot.clone()
+
+        for _ in range(steps):
+            propagated = Y @ adj_norm
+            Y = alpha * labels_multihot + (1 - alpha) * propagated
+        return Y
+        """
+        # Version that updates labels recursively
+        # Y^{(t+1)} = \alpha Y^{(t)} + (1-\alpha) Y^{(t)}A
+        # sums = labels_multihot.sum(dim=1)
+        # print(sums)
+        for _ in range(steps):
+            propagated = labels_multihot @ adj_norm
+            labels_multihot = alpha * labels_multihot + (1 - alpha) * propagated
+        # labels_multihot = labels_multihot * sums # de-normalize
+        return labels_multihot

@@ -22,7 +22,7 @@ from train import (
 # ─────────────────────────────────────────────────────────────────────
 
 TURTLE_PATH   = "../../corpus/UAT_v6.0.0.rdf" # Input graph
-CORPUS_PATH   = ADS_CORPUS_DIR # can use ADS_HELIOPHYSICS_CORPUS_DIR for HP-only
+CORPUS_PATH   = ADS_HELIO_CORPUS_DIR #ADS_CORPUS_DIR # can use ADS_HELIOPHYSICS_CORPUS_DIR for HP-only
 DEVICE        = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Hyperparameters
@@ -70,18 +70,25 @@ for document, annotation in reader.read_corpus(ignore_kailas = False,
 # ─────────────────────────────────────────────────────────────────────
 
 print("\n=== Vectorization of documents ===")
-doc_embeddings = onto.embed_training_corpus(corpus_name = "ADS_HelioPhysics_corpus",
+doc_embeddings = onto.embed_training_corpus(corpus_name = "ADS_corpus",
                                             texts = documents)    # [D, 768]
-print(f"Shape embeddings documents : {doc_embeddings.shape}")
-
+print(f"Shape embeddings documents: {doc_embeddings.shape}")
 
 # ─────────────────────────────────────────────────────────────────────
 # 4. BUILDING DATASET
 # ─────────────────────────────────────────────────────────────────────
 
 labels_multihot = build_multihot(annotations, onto.node2idx)   # [D, N]
-dataset = DocumentOntologyDataset(doc_embeddings, labels_multihot)
+labels_smoothed = onto.labels_smoothing(labels_multihot,
+                                        alpha = 0.9,
+                                        steps = 2,
+                                        edges = {0, 1, 2, 3}) # broader, narrower, related, self (for weight conservation)
+print("labels multihot std:", labels_multihot.std(dim=0).mean())
+print("labels smoothed std:", labels_smoothed.std(dim=0).mean())
+
+dataset = DocumentOntologyDataset(doc_embeddings, labels_smoothed)#labels_multihot)
 print(f"Labels density : {labels_multihot.mean():.4f} (ratio of 1s in the matrix)")
+print(f"Labels smoothed density : {labels_smoothed.mean():.4f} (ratio of 1s in the matrix)")
 
 
 # ─────────────────────────────────────────────────────────────────────
