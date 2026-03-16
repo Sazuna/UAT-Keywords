@@ -18,17 +18,18 @@ ADS_API_TOKEN = os.environ.get("ADS_API_TOKEN")
 # Categories of interest
 HP_CATEGORIES = {"2373": "Heliophysics"}
 
-ALL_CATEGORIES = {#"104":  "Astrophysical processes",
-                  #"343":  "Cosmology",
-                  #"486":  "Exoplanet astronomy",
-                  #"563":  "Galactic and extragalactic astronomy",
-                  #"2373": "Heliophysics",
-                  #"739":  "High energy astrophysics",
-                  #"804":  "Interdisciplinary astronomy",
-                  #"847":  "Interstellar medium",
-                  #"1145": "Observational astronomy",
-                  #"1529": "Solar system astronomy",
-                  "1583": "Stellar astronomy"}
+ALL_CATEGORIES = {"104":  "Astrophysical processes",
+                  "343":  "Cosmology",
+                  "486":  "Exoplanet astronomy",
+                  "563":  "Galactic and extragalactic astronomy",
+                  "2373": "Heliophysics",
+                  "739":  "High energy astrophysics",
+                  "804":  "Interdisciplinary astronomy",
+                  "847":  "Interstellar medium",
+                  "1145": "Observational astronomy",
+                  "1529": "Solar system astronomy",
+                  "1583": "Stellar astronomy"
+                 }
 
 UAT_NAMESPACE = "http://astrothesaurus.org/uat/"
 
