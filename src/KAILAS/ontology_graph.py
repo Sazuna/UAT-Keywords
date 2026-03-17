@@ -1,0 +1,211 @@
+"""
+ontology_graph.py
+Chargement de l'ontologie Turtle et construction du graphe PyTorch Geometric.
+"""
+
+import torch
+import re
+# import pickle
+from rdflib import Graph, URIRef
+from rdflib.namespace import SKOS, RDF
+from torch_geometric.data import Data
+# from transformers import AutoTokenizer, AutoModel
+from typing import Dict, Tuple, List
+from pathlib import Path
+# from config import BERT_UATS_EMBEDDINGS_FILE, BERT_DOCS_EMBEDDINGS_FILE
+
+
+SKOS_BROADER = SKOS.broader
+SKOS_NARROWER = SKOS.narrower
+SKOS_RELATED = SKOS.related
+
+
+class OntologyGraph:
+    """
+    Load an ontology and produce
+      - node_features  : tensor [N, hidden_dim] (BERT embeddings of textual representation)
+      - node2idx / idx2node : mappings URI <-> integer
+    """
+
+    def __init__(self, turtle_path: str):#, bert_model_name: str = "bert-base-uncased"):
+        self.turtle_path = turtle_path
+
+        self.node2idx: Dict[str, int] = {}
+        self.idx2node: Dict[int, str] = {}
+        self.node_texts: List[str] = []
+
+        self.load()
+
+    # ------------------------------------------------------------------
+    # Parsing
+    # ------------------------------------------------------------------
+
+    def load(self) -> Data:
+        rdf = Graph()
+        rdf.parse(self.turtle_path, format="xml")
+
+        # 1. Collect all nodes (subjects or objects of a SKOS relation)
+        relations = [
+            (SKOS_BROADER, "broader"),
+            (SKOS_NARROWER, "narrower"),
+            (SKOS_RELATED, "related"),
+        ] # "self" for self-attention (node to self edges)
+
+        nodes_set = set()
+
+        for predicate, etype in relations:
+            for s, _, o in rdf.triples((None, predicate, None)):
+                s_str, o_str = str(s), str(o)
+                nodes_set.update([s_str, o_str])
+
+        # Fallback: add nodes that are concepts and self-attention edges
+        for s, _, _ in rdf.triples((None, RDF.type, SKOS.Concept)):
+            nodes_set.add(str(s))
+
+        # TODO add a global node (whole graph) with edges between the global node and all nodes
+
+        # 2. Node indexation
+        sorted_nodes = sorted(nodes_set)
+        self.node2idx = {n: i for i, n in enumerate(sorted_nodes)}
+        self.idx2node = {i: n for n, i in self.node2idx.items()}
+
+        # 3. Textual representation (prefLabel + altLabel + definition)
+        self.node_texts = []
+        for node_uri in sorted_nodes:
+            uri_ref = URIRef(node_uri)
+            pref_label = self._get_literal(rdf, uri_ref, SKOS.prefLabel)
+            alt_label = self._get_literal(rdf, uri_ref, SKOS.altLabel)
+            definition = self._get_literal(rdf, uri_ref, SKOS.definition)
+            text = pref_label + " " + alt_label + " " + definition
+            text = re.sub(r"\s+", " ", text)
+            # node_uri.split("/")[-1].split("#")
+            self.node_texts.append(text)
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _get_literal(rdf, subject, predicate) -> str:
+        for _, _, o in rdf.triples((subject, predicate, None)):
+            return str(o)
+        return ""
+
+
+    """
+    @torch.no_grad()
+    def _embed_texts(self, texts: List[str], batch_size: int = 32) -> torch.Tensor:
+        #CLS-token embedding via BERT (embed nodes)
+        all_embeds = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i: i + batch_size]
+            enc = self.tokenizer(
+                batch, padding=True, truncation=True,
+                max_length=64, return_tensors="pt"
+            )
+            out = self.bert(**enc)
+            cls = out.last_hidden_state[:, 0, :]   # [B, 768]
+            all_embeds.append(cls.cpu())
+        return torch.cat(all_embeds, dim=0)
+    """
+
+    """
+    def embed_training_corpus(self, corpus_name: str, texts: List[str], batch_size: int = 16) -> torch.Tensor:
+        Vectorize a static corpus of documents.
+        Save the embeddings to prevent re-vectorizing in the future.
+        filename = str(BERT_DOCS_EMBEDDINGS_FILE).removesuffix(".pkl")
+        filename += f"{corpus_name}_{len(texts)}docs.pkl"
+        filename = Path(filename)
+        if filename.exists():
+            print("Loading embeddings from", filename)
+            with open(filename, "rb") as file:
+                return pickle.load(file)
+        embeds = self._embed_texts(texts, batch_size)
+        with open(filename, "wb") as file:
+            pickle.dump(embeds, file)
+        return embeds
+    """
+
+    def labels_smoothing(self,
+                         labels_multihot: torch.Tensor,
+                         alpha: float = 0.9,
+                         steps: int = 2,
+                         edges: set[int] = {0, 1, 2, 3}) -> torch.Tensor:
+        """
+        Graph-based label smoothing (or label propagation / label spreading)
+
+        Y^{(t+1)} = \alpha Y + (1-\alpha) D^{-1} A Y^{(t)}
+        Y € R^DxN: multi-hot labels
+        A: adjacency matrix filtered by edge types
+        alpha: original label weight
+        t: propagation step
+
+        Args:
+            labels_multihot : [D, N] Multi-hot labels for each document.
+            # adj_matrix      : [N, N] Adjacency matrix of the ontology graph.
+            alpha           : float  Weight for original labels.
+            steps           : int    How many times should the labels be smoothed.
+        ex: if alpha = 0.9, new weight of 1.0 => 0.9, 0.1 is distributed equally to its neighbors
+
+        Returns
+            smoothed_labels : [D, N]
+        """
+        num_nodes = self.graph_data.num_nodes
+        edge_index = self.graph_data.edge_index
+        edge_type  = self.graph_data.edge_type
+
+        # ---- filter edges by type ----
+        mask = torch.zeros_like(edge_type, dtype=torch.bool)
+        for e in edges:
+            mask |= (edge_type == e)
+
+        filtered_edges = edge_index[:, mask]
+
+        adj_matrix = torch.zeros(
+            num_nodes,
+            num_nodes
+        )
+
+        adj_matrix[
+            filtered_edges[0],
+            filtered_edges[1],
+        ] = 1
+
+        # Degree matrix
+        deg = adj_matrix.sum(dim=1)
+
+        # Avoid division by zero
+        deg_inv = 1.0 / (deg + 1e-8)
+
+        # Normalize adjacency
+        adj_norm = adj_matrix * deg_inv.unsqueeze(1)
+
+        """
+        for _ in range(steps):
+            # Graph propagation
+            propagated = labels_multihot @ adj_norm
+
+            # Combine original + propagated
+            # "Learning with Local and Global Consistency" (Zhou et al., 2003)
+            labels_multihot = alpha * labels_multihot + (1 - alpha) * propagated
+        """
+        # ---- smoothing steps ----
+        """
+        # Version that keeps the original labels_multihot at each step
+        # Y^{(t+1)} = \alpha Y^{(0)} + (1-\alpha) Y^{(t)}A
+        Y = labels_multihot.clone()
+
+        for _ in range(steps):
+            propagated = Y @ adj_norm
+            Y = alpha * labels_multihot + (1 - alpha) * propagated
+        return Y
+        """
+        # Version that updates labels recursively
+        # Y^{(t+1)} = \alpha Y^{(t)} + (1-\alpha) Y^{(t)}A
+        # sums = labels_multihot.sum(dim=1)
+        # print(sums)
+        for _ in range(steps):
+            propagated = labels_multihot @ adj_norm
+            labels_multihot = alpha * labels_multihot + (1 - alpha) * propagated
+        # labels_multihot = labels_multihot * sums # de-normalize
+        return labels_multihot
