@@ -42,9 +42,6 @@ def compute_on_ads_corpus():
         print(filename)
         with open(ADS_HELIO_CORPUS_DIR / filename, "r") as file:
             doc = json.load(file)
-        abstract = doc["abstract"]
-        keywords = doc["keywords"]
-        title = doc["title"][0]
         bibcode = doc["bibcode"]
         if bibcode in kailas_bibcodes:
             ignored += 1
@@ -58,7 +55,8 @@ def compute_on_ads_corpus():
                             None)
         # candidate_uris = []
         # for candidate_uris in document.get_best_keywords(top_k = 1):
-        candidate_uris = sum(list(document.get_best_keywords(top_k = 1)), [])
+        candidate_uris_by_sentence = list(document.get_best_keywords(top_k = 3))
+        candidate_uris = sum(candidate_uris_by_sentence, [])
 
         """
         for sentence in sentencize(title + '.' + abstract + '.' + keywords):
@@ -196,7 +194,7 @@ def compute_on_test_corpus():
         print(doi, title)
         print("Papers UATs:", ', '.join([f"{get_uat_label(u)} ({u})" for u in sorted(papers_uats)]))
         output_uats = set(candidate_uris)
-        print("Output UATs:", ', '.join([f"{get_uat_label(u)} ({u})" for u in sorted(output_uats)]))
+        print("Output UATs:", ', '.join([f"{get_uat_label_kailas(u)} ({u})" for u in sorted(output_uats)]))
         print("\n")
         # TP
         TP += len(papers_uats & output_uats)

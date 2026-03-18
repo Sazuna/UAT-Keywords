@@ -18,7 +18,7 @@ from pathlib import Path
 SKOS_BROADER = SKOS.broader
 SKOS_NARROWER = SKOS.narrower
 SKOS_RELATED = SKOS.related
-
+UAT_NAMESPACE = "http://astrothesaurus.org/uat/"
 
 class OntologyGraph:
     """
@@ -65,14 +65,28 @@ class OntologyGraph:
         # TODO add a global node (whole graph) with edges between the global node and all nodes
 
         # 2. Node indexation
-        sorted_nodes = sorted(nodes_set)
-        self.node2idx = {n: i for i, n in enumerate(sorted_nodes)}
-        self.idx2node = {i: n for n, i in self.node2idx.items()}
+        #sorted_nodes = sorted(nodes_set)
+        #self.node2idx = {n: i for i, n in enumerate(sorted_nodes)}
+        #self.idx2node = {i: n for n, i in self.node2idx.items()}
+
+        # 2. Node indexation - Aligned with KAILAS' onehot indexes
+        def _extract_uat_id(uri: str):
+            match = re.search(r'/(\d+)$', uri)
+            return int(match.group(1)) if match else None
+        uat_nodes = []
+        for n in nodes_set:
+            uat_id = _extract_uat_id(n)
+            if uat_id is not None:
+                uat_nodes.append((uat_id, n))
+        uat_nodes.sort(key=lambda x: x[0])
+
+        self.node2idx = {n: uat_id for uat_id, n in uat_nodes}
+        self.idx2node = {uat_id: n for uat_id, n in uat_nodes}
 
         # 3. Textual representation (prefLabel + altLabel + definition)
         self.node_texts = []
-        for node_uri in sorted_nodes:
-            uri_ref = URIRef(node_uri)
+        for node_uri, _ in uat_nodes:
+            uri_ref = URIRef(UAT_NAMESPACE + str(node_uri))
             pref_label = self._get_literal(rdf, uri_ref, SKOS.prefLabel)
             alt_label = self._get_literal(rdf, uri_ref, SKOS.altLabel)
             definition = self._get_literal(rdf, uri_ref, SKOS.definition)
