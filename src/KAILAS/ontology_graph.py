@@ -13,12 +13,19 @@ from torch_geometric.data import Data
 from typing import Dict, Tuple, List
 from pathlib import Path
 # from config import BERT_UATS_EMBEDDINGS_FILE, BERT_DOCS_EMBEDDINGS_FILE
+from transformers import AutoModelForSequenceClassification
 
 
 SKOS_BROADER = SKOS.broader
 SKOS_NARROWER = SKOS.narrower
 SKOS_RELATED = SKOS.related
 UAT_NAMESPACE = "http://astrothesaurus.org/uat/"
+
+
+# Load KAILAS' official mapping (on UATs v.5.x)
+kailas_model = AutoModelForSequenceClassification.from_pretrained("adsabs/KAILAS")
+id2label = kailas_model.config.id2label  # {0: '2', 1: '3', ...}
+label2id = kailas_model.config.label2id  # {'2': 0, '3': 1, ...}
 
 class OntologyGraph:
     """
@@ -55,21 +62,21 @@ class OntologyGraph:
 
         for predicate, etype in relations:
             for s, _, o in rdf.triples((None, predicate, None)):
-                s_str, o_str = str(s), str(o)
-                nodes_set.update([s_str, o_str])
+                s_int, o_int = int(s.split('/')[-1]), int(s.split('/')[-1])
+                nodes_set.update([s_int, o_int])
 
         # Fallback: add nodes that are concepts and self-attention edges
         for s, _, _ in rdf.triples((None, RDF.type, SKOS.Concept)):
-            nodes_set.add(str(s))
+            nodes_set.add(int(s.split('/')[-1]))
 
         # TODO add a global node (whole graph) with edges between the global node and all nodes
 
         # 2. Node indexation
-        #sorted_nodes = sorted(nodes_set)
-        #self.node2idx = {n: i for i, n in enumerate(sorted_nodes)}
-        #self.idx2node = {i: n for n, i in self.node2idx.items()}
-
-        # 2. Node indexation - Aligned with KAILAS' onehot indexes
+        sorted_nodes = sorted(nodes_set)
+        sorted_nodes.remove(0)
+        self.node2idx = {n: i for i, n in enumerate(sorted_nodes)}
+        self.idx2node = {i: n for n, i in self.node2idx.items()}
+        """
         def _extract_uat_id(uri: str):
             match = re.search(r'/(\d+)$', uri)
             return int(match.group(1)) if match else None
@@ -79,13 +86,26 @@ class OntologyGraph:
             if uat_id is not None:
                 uat_nodes.append((uat_id, n))
         uat_nodes.sort(key=lambda x: x[0])
+        """
 
-        self.node2idx = {n: uat_id for uat_id, n in uat_nodes}
-        self.idx2node = {uat_id: n for uat_id, n in uat_nodes}
+        # 2. Node indexation - Aligned with KAILAS' onehot indexes
+        self.node2idx = label2id
+        self.idx2node = id2label
 
         # 3. Textual representation (prefLabel + altLabel + definition)
         self.node_texts = []
-        for node_uri, _ in uat_nodes:
+        for node_uri in sorted_nodes:
+            if node_uri not in self.node2idx:
+                print(node_uri, "type:", type(node_uri))
+                # Add new UATs unsupported by KAILAS, while keeping KAILAS' UATs
+                # some UATs are deprecated in v6.0.0 but KAILAS will still predict them
+                i = str(len(self.node2idx))
+                assert i not in self.idx2node
+                self.node2idx[node_uri] = i
+                self.idx2node[i] = node_uri
+                print("Not in old version of the UATs:", i, node_uri)
+                print(self.node2idx)
+                exit()
             uri_ref = URIRef(UAT_NAMESPACE + str(node_uri))
             pref_label = self._get_literal(rdf, uri_ref, SKOS.prefLabel)
             alt_label = self._get_literal(rdf, uri_ref, SKOS.altLabel)
