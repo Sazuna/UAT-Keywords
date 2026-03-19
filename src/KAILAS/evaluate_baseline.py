@@ -11,6 +11,7 @@ from config import ADS_HELIO_CORPUS_DIR, TEST_CORPUS_FILE
 from tqdm import tqdm
 from uat_utils import *
 from document import Document
+from corpus_loader import Reader
 
 from transformers import pipeline
 classifier = pipeline("text-classification", model = "adsabs/KAILAS")
@@ -106,79 +107,6 @@ def compute_on_ads_corpus():
 
 compute_on_ads_corpus()
 
-
-####### Our test corpus in Heliophysics ########
-class Reader():
-    def read_pre9forADS(self) -> Iterable[tuple[str, str, str, str, str, str]]:
-        with open(TEST_CORPUS_FILE, "r") as file:
-            lines = file.readlines()
-            all_docs = dict()
-            doc = None
-            state = None
-            prefix = ""
-            doi = None
-            for line in lines:
-                if line.startswith("%R"): # reference
-                    # all_docs.append(doc)
-                    if doi:
-                        all_docs[doi] = doc
-                    doc = defaultdict(str)
-                    state = "reference"
-                    prefix = "%R"
-                elif line.startswith("%T"):
-                    state = "title"
-                    prefix = "%T"
-                elif line.startswith("%B"):
-                    state = "abstract"
-                    prefix = "%B"
-                elif line.startswith("%A"):
-                    state = "authors"
-                    prefix = "%A"
-                elif line.startswith("%F"):
-                    state = "affiliation"
-                    prefix = "%F"
-                elif line.startswith("%I"):
-                    state = "DOI"
-                    prefix = "%I"
-                elif line.startswith("%K"):
-                    state = "Keywords"
-                    prefix = "%K"
-                elif line.startswith("%C"):
-                    state = "copyright"
-                    prefix = "%C"
-                elif line.startswith("%D"):
-                    state = "date"
-                    prefix = "%D"
-                elif line.startswith("%J"):
-                    state = "journal"
-                    prefix = "%J"
-                elif line.startswith("%R"):
-                    state = "r..."
-                    prefix = "%R"
-                elif line.startswith("%U"):
-                    state = "uats"
-                    prefix = "%U"
-                elif line.startswith("%Z"):
-                    state = "z..."
-                    prefix = "%Z"
-
-                if not state:
-                    continue
-                elif state == "DOI":
-                    doi = line.removeprefix(prefix).strip()
-                else:
-                    doc[state] += line.removeprefix(prefix).strip() + ' '
-
-            for doi, doc in all_docs.items():
-                keywords = doc.get("keywords", "").strip()
-                title = doc.get("title", "").strip()
-                abstract = doc.get("abstract", "").strip()
-                journal = doc.get("journal", "")
-                uats = [u.strip() for u in doc.get("uats", "").split(',') if u.strip()]
-                yield doi, title, abstract, keywords, journal, uats
-
-
-
 def compute_on_test_corpus():
     corpus_reader = Reader()
 
@@ -194,7 +122,7 @@ def compute_on_test_corpus():
         print(doi, title)
         print("Papers UATs:", ', '.join([f"{get_uat_label(u)} ({u})" for u in sorted(papers_uats)]))
         output_uats = set(candidate_uris)
-        print("Output UATs:", ', '.join([f"{get_uat_label_kailas(u)} ({u})" for u in sorted(output_uats)]))
+        print("Output UATs:", ', '.join([f"{get_uat_label(u)} ({u})" for u in sorted(output_uats)]))
         print("\n")
         # TP
         TP += len(papers_uats & output_uats)

@@ -1,5 +1,5 @@
 from typing import List, Dict
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer, AutoConfig
 from datasets import Dataset
 import torch
 import numpy as np
@@ -9,12 +9,16 @@ import ontology_graph
 
 # Load model and tokenizer
 MODEL_NAME = "adsabs/KAILAS"
+REVISION = "v3" # @param {type:"string"}
 CORPUS_PATH = config.ADS_CORPUS_DIR
 NUM_LABELS = 2372 #2411
 THRESHOLD = 0.5
 NUM_EPOCHS = 1
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME,
+                                          max_length = 512,
+                                          do_lower_case = False,
+                                          revision = REVISION)
 def tokenize(batch):
     tokens = tokenizer(batch["text"], truncation=True, padding="max_length", max_length=512)
     # tokens["labels"] = [list(map(float, build_multihot(l))) for l in batch["labels"]]
@@ -22,9 +26,16 @@ def tokenize(batch):
     return tokens
 
 onto = ontology_graph.OntologyGraph(config.CORPUS_DIR / "UAT_v6.0.0.rdf")
-node2idx = onto.node2idx
+node2idx = onto.node2idx # TODO use those instead of KAILAS' label2id & id2label
 idx2node = onto.idx2node
 UAT_NAMESPACE = "http://astrothesaurus.org/uat/"
+
+#kailas_config = AutoConfig.from_pretrained(MODEL_NAME)
+#label2id = kailas_config.label2id
+#id2label = kailas_config.id2label
+# node2idx aligné sur KAILAS : URI → index
+node2idx = {f"{UAT_NAMESPACE}{uat_id}": idx for idx, uat_id in idx2node.items()}
+idx2node  = {idx: f"{UAT_NAMESPACE}{uat_id}" for idx, uat_id in node2idx.items()}
 
 def build_multihot(
     annotations: List[List[str]],

@@ -19,12 +19,6 @@ THRESHOLD       = 0.62
 onto     = ontology_graph.OntologyGraph(config.CORPUS_DIR / "UAT_v6.0.0.rdf")
 node2idx = onto.node2idx
 idx2node = onto.idx2node
-# Est-ce que l'index UAT correspond bien à la position dans node2idx ?
-test_uri = "http://astrothesaurus.org/uat/1360"
-print(f"node2idx[{test_uri}] = {node2idx[test_uri]}")
-# Doit afficher : 1360
-# Si ça affiche autre chose → vos labels sont décalés
-exit()
 
 # ── Tokenizer & modèle ────────────────────────────────────────────────────────
 tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_NAME)
