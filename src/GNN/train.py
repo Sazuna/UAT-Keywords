@@ -125,8 +125,8 @@ def evaluate(
             pred_labels_by_doc += preds.sum() / preds.shape[0]
             true_labels_by_doc += onehot.sum() / onehot.shape[0]
 
-            all_preds.append(preds)
-            all_labels.append(onehot.numpy())
+            all_preds.append(preds.cpu().numpy())
+            all_labels.append(onehot.cpu().numpy())
 
     avg_val_loss = total_val_loss / len(loader)
     pred_labels_by_doc /= len(loader)

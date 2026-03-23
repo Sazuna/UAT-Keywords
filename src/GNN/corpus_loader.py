@@ -1,7 +1,6 @@
 import json
 import os
 from config import TEST_CORPUS_FILE, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
-from tqdm import tqdm
 from typing import Iterable
 from pathlib import Path
 from collections import defaultdict
@@ -131,7 +130,7 @@ class Reader():
             ignore_kailas: ignore documents that are in the KAILAS training set.
         """
         total = 0
-        for filename in tqdm(sorted(os.listdir(corpus_folder))):
+        for filename in sorted(os.listdir(corpus_folder)):
             with open(corpus_folder / filename, "r") as file:
                 doc = json.load(file)
             abstract = doc["abstract"]
