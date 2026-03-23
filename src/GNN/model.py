@@ -112,6 +112,7 @@ class DocumentNodeScorer(nn.Module):
         d = F.normalize(d, dim=-1)
         n = F.normalize(node_emb, dim=-1)    # [N, node_out_dim]
         logits = d @ n.T                     # [B, N]
+
         return logits
 
 
@@ -130,7 +131,7 @@ class GNNOntologyClassifier(nn.Module):
         bert_dim: int = 768,
         rgcn_hidden: int = 256,
         rgcn_out: int = 128,
-        num_relations: int = 4,
+        num_relations: int = 5,
         num_layers: int = 2,
         dropout: float = 0.3,
     ):

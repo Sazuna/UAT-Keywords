@@ -3,8 +3,9 @@ main.py
 
 Load the UATs ontology, vectorize documents, train GNN and infer on our pre-print corpus.
 """
-
 import torch
+import pathlib
+import datetime
 from config import BERT_MODEL, THRESHOLD, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
 from ontology_graph import OntologyGraph
 import corpus_loader
@@ -16,23 +17,40 @@ from train import (
     predict,
 )
 
+import random
+import numpy as np
+import torch
+
+SEED = 42
+
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+torch.cuda.manual_seed_all(SEED)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+
 
 # ─────────────────────────────────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────────────────────────────────
 
-TURTLE_PATH   = "../../corpus/UAT_v6.0.0.rdf" # Input graph
-CORPUS_PATH   = ADS_HELIO_CORPUS_DIR #ADS_CORPUS_DIR # can use ADS_HELIOPHYSICS_CORPUS_DIR for HP-only
+ONTO_PATH     = "../../corpus/UAT_v6.0.0.rdf" # Input graph
+CORPUS_PATH   = ADS_CORPUS_DIR  # can use ADS_HELIOPHYSICS_CORPUS_DIR for HP-only
 DEVICE        = "cuda" if torch.cuda.is_available() else "cpu"
+RUNS          = pathlib.Path("runs")
 
 # Hyperparameters
 RGCN_HIDDEN   = 256
 RGCN_OUT      = 128
-NUM_LAYERS    = 2     # smoothing of the representations
-DROPOUT       = 0.3
-EPOCHS        = 10
+NUM_LAYERS    = 1 #2     # smoothing of the representations
+DROPOUT       = 0.2 #0.3
+EPOCHS        = 50
 BATCH_SIZE    = 16
-LR            = 1e-3
+LR            = 1e-2
+
+# Results:
+# RGCN_HIDDEN => 128, RGCN_OUT => 56, LR => 1e-3: 0.5 after 3 ep
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -40,7 +58,7 @@ LR            = 1e-3
 # ─────────────────────────────────────────────────────────────────────
 
 print("=== Loading ontology ===")
-onto = OntologyGraph(turtle_path=TURTLE_PATH, bert_model_name=BERT_MODEL)
+onto = OntologyGraph(uat_ontology_path=ONTO_PATH, bert_model_name=BERT_MODEL)
 graph = onto.load()
 
 print(f"N nodes (vertex) : {graph.num_nodes}")
@@ -90,16 +108,28 @@ dataset = DocumentOntologyDataset(doc_embeddings, labels_smoothed)#labels_multih
 print(f"Labels density : {labels_multihot.mean():.4f} (ratio of 1s in the matrix)")
 print(f"Labels smoothed density : {labels_smoothed.mean():.4f} (ratio of 1s in the matrix)")
 
+# What are the most frequent nodes in the corpus ?
+counts = labels_multihot.sum(dim=0)
+top = counts.topk(20)
+print("Most frequent nodes in the labels:")
+for idx, count in zip(top.indices, top.values):
+    print(f"{count:.0f}  {onto.node_texts[idx][:60]}")
+
+# Et les nœuds liés à AKR sont-ils présents ?
+for uri, idx in onto.node2idx.items():
+    if "kilometric" in onto.node_texts[idx].lower():
+        print(idx, counts[idx].item(), onto.node_texts[idx][:80])
 
 # ─────────────────────────────────────────────────────────────────────
 # 5. MODEL
 # ─────────────────────────────────────────────────────────────────────
+print("doc emb shape[1]:", doc_embeddings.shape[1])
 
 model = GNNOntologyClassifier(
     bert_dim      = doc_embeddings.shape[1],
     rgcn_hidden   = RGCN_HIDDEN,
     rgcn_out      = RGCN_OUT,
-    num_relations = 4,   # broader / narrower / related / self # TODO add a global relation
+    num_relations = len(OntologyGraph.EDGE_TYPES),
     num_layers    = NUM_LAYERS,
     dropout       = DROPOUT,
 )
@@ -112,6 +142,7 @@ print(f"\nTotal of trainable parameters: {total_params:,}")
 # 6. TRAINING
 # ─────────────────────────────────────────────────────────────────────
 
+log_dir = f"{datetime.datetime.now().strftime()}_{RGCN_HIDDEN}h-{RGCN_OUT}o-{NUM_LAYERS}l"
 print("\n=== Training ===")
 best_f1 = train(
     model           = model,
@@ -123,6 +154,7 @@ best_f1 = train(
     pos_weight_factor = 1.0,
     device          = DEVICE,
     checkpoint_path = "best_model.pt",
+    log_dir         = RUNS / log_dir
 )
 
 

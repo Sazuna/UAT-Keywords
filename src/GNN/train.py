@@ -13,6 +13,7 @@ from typing import List, Tuple, Dict
 from config import THRESHOLD
 import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score
+from torch.utils.tensorboard import SummaryWriter
 
 from model import GNNOntologyClassifier
 
@@ -118,7 +119,6 @@ def evaluate(
                     topk = torch.topk(labels[i], k)
                     onehot[i, topk.indices] = 1
             # ------------------------------
-
             val_loss = criterion(logits, labels)
             total_val_loss += val_loss.item()
 
@@ -161,7 +161,9 @@ def train(
     pos_weight_factor: float = 1.0,   # compensate desequilibrum multi-label (TODO remove this)
     device: str = "cpu",
     checkpoint_path: str = "best_model.pt",
+    log_dir: str = "runs/gnn",
 ):
+    writer = SummaryWriter(log_dir=log_dir)
     # Split train / val
     val_size   = max(1, int(len(dataset) * val_ratio))
     train_size = len(dataset) - val_size
@@ -178,7 +180,6 @@ def train(
     # BCE with positive class weighting (multi-label)
     # num_nodes = graph.num_nodes
     # pos_weight = torch.ones(num_nodes, device=device) # * pos_weight_factor
-    """
     num_nodes = graph.num_nodes
     pos_counts = torch.zeros(num_nodes)
     total_samples = 0
@@ -187,12 +188,16 @@ def train(
         total_samples += 1
 
     neg_counts = total_samples - pos_counts
-    pos_weight = neg_counts / (pos_counts + 1e-6)
-    pos_weight = pos_weight.to(device)
-    #print("pos_weight:", pos_weight)
-    """
 
-    criterion = nn.BCEWithLogitsLoss()#pos_weight=pos_weight)
+    pos_weight = torch.ones(num_nodes, device=device) # weight stays to 1 for unused UATs
+    mask = pos_counts > 0
+    pos_weight[mask] = neg_counts[mask] / pos_counts[mask]
+    # pos_weight = neg_counts / (pos_counts)
+    pos_weight = pos_weight.clamp(max=500.0)
+    print("std dev for pos_weight:", pos_weight.std())
+    pos_weight = pos_weight.to(device)
+
+    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -232,10 +237,10 @@ def train(
             f"f1_micro={f1:.4f} | f1_macro={metrics['f1_macro']:.4f} | "
             f"prec={metrics['precision_micro']:.4f} | recall={metrics['recall_micro']:.4f}"
         )
-        print(
-            f"true labels by doc={metrics['true_labels_by_doc']:.4f} | "
-            f"pred labels by doc={metrics['pred_labels_by_doc']:.0f}"
-        )
+        #print(
+        #    f"true labels by doc={metrics['true_labels_by_doc']:.4f} | "
+        #    f"pred labels by doc={metrics['pred_labels_by_doc']:.0f}"
+        #)
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
@@ -247,6 +252,19 @@ def train(
             torch.save(model.state_dict(), checkpoint_path)
             print(f"  ✓ Best model saved (f1={best_f1:.4f})")
         """
+
+
+
+        # TensorBoard
+        writer.add_scalar("loss/train", avg_loss, epoch)
+        writer.add_scalar("loss/val", val_loss, epoch)
+        writer.add_scalar("f1/micro", f1, epoch)
+        writer.add_scalar("f1/macro", metrics["f1_macro"], epoch)
+        writer.add_scalar("precision/micro", metrics["precision_micro"], epoch)
+        writer.add_scalar("recall/micro", metrics["recall_micro"], epoch)
+        #writer.add_scalar("labels/true_per_doc", metrics["true_labels_by_doc"], epoch)
+        #writer.add_scalar("labels/pred_per_doc", metrics["pred_labels_by_doc"], epoch)
+        writer.add_scalar("lr", optimizer.param_groups[0]["lr"], epoch)
 
     print(f"\nTraining done. Best micro-F1: {best_f1:.4f}")
     return best_f1

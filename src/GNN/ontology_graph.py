@@ -29,10 +29,15 @@ class OntologyGraph:
       - node2idx / idx2node : mappings URI <-> integer
     """
 
-    EDGE_TYPES = {"broader": 0, "narrower": 1, "related": 2, "self": 3}
+    EDGE_TYPES = {"broader": 0,
+                  "narrower": 1,
+                  "related": 2,
+                  "self": 3,
+                  "global2node": 4,
+                  "node2global": 5}
 
-    def __init__(self, turtle_path: str, bert_model_name: str = "bert-base-uncased"):
-        self.turtle_path = turtle_path
+    def __init__(self, uat_ontology_path: str, bert_model_name: str = "bert-base-uncased"):
+        self.uat_ontology_path = uat_ontology_path
         self.bert_model_name = bert_model_name
 
         self.tokenizer = AutoTokenizer.from_pretrained(bert_model_name)
@@ -51,7 +56,7 @@ class OntologyGraph:
 
     def load(self) -> Data:
         rdf = Graph()
-        rdf.parse(self.turtle_path, format="xml")
+        rdf.parse(self.uat_ontology_path, format="xml")
 
         # 1. Collect all nodes (subjects or objects of a SKOS relation)
         relations = [
@@ -69,12 +74,16 @@ class OntologyGraph:
                 nodes_set.update([s_str, o_str])
                 edges_raw.append((s_str, o_str, etype))
 
+        # Add a global node (whole graph) with edges between the global node and all nodes
+        global_node = "global"
+        nodes_set.add(global_node)
         # Fallback: add nodes that are concepts and self-attention edges
         for s, _, _ in rdf.triples((None, RDF.type, SKOS.Concept)):
-            nodes_set.add(str(s))
+            s_str = str(s)
+            nodes_set.add(s_str)
             edges_raw.append((s_str, s_str, "self")) # self attention edges
-
-        # TODO add a global node (whole graph) with edges between the global node and all nodes
+            edges_raw.append((global_node, s_str, "global2node")) # connect to global attention node
+            edges_raw.append((s_str, global_node, "node2global")) # connect to global attention node
 
         # 2. Node indexation
         sorted_nodes = sorted(nodes_set)
@@ -99,10 +108,18 @@ class OntologyGraph:
         if BERT_UATS_EMBEDDINGS_FILE.exists():
             with open(BERT_UATS_EMBEDDINGS_FILE, "rb") as file:
                 node_features = pickle.load(file)
+                if "global2node" in self.EDGE_TYPES or "node2global" in self.EDGE_TYPES:
+                    # Add a global embedding (mean of all embeddings) for the global node
+                    global_feat = node_features.mean(dim=0, keepdim=True)
+                    node_features = torch.cat([node_features, global_feat], dim=0)
         if node_features is None:
             node_features = self._embed_texts(self.node_texts)  # [N, 768]
             with open(BERT_UATS_EMBEDDINGS_FILE, "wb") as file:
                 pickle.dump(node_features, file)
+            if "global2node" in self.EDGE_TYPES or "node2global" in self.EDGE_TYPES:
+                    # Add a global embedding (mean of all embeddings) for the global node
+                global_feat = node_features.mean(dim=0, keepdim=True)
+                node_features = torch.cat([node_features, global_feat], dim=0)
 
         # 5. Build edge_index and edge_type
         src_list, dst_list, etype_list = [], [], []
@@ -113,6 +130,8 @@ class OntologyGraph:
 
         edge_index = torch.tensor([src_list, dst_list], dtype=torch.long)
         edge_type = torch.tensor(etype_list, dtype=torch.long)
+
+        print(len(sorted_nodes))
 
         self.graph_data = Data(
             x=node_features,
