@@ -10,6 +10,7 @@ from config import BERT_MODEL, THRESHOLD, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
 from ontology_graph import OntologyGraph
 import corpus_loader
 from model import GNNOntologyClassifier
+from torchviz import make_dot
 from train import (
     DocumentOntologyDataset,
     build_multihot,
@@ -35,19 +36,20 @@ torch.backends.cudnn.benchmark = False
 # CONFIG
 # ─────────────────────────────────────────────────────────────────────
 
-ONTO_PATH     = "../../corpus/UAT_v6.0.0.rdf" # Input graph
-CORPUS_PATH   = ADS_CORPUS_DIR  # can use ADS_HELIOPHYSICS_CORPUS_DIR for HP-only
-DEVICE        = "cuda" if torch.cuda.is_available() else "cpu"
-RUNS          = pathlib.Path("runs")
+ONTO_PATH       = "../../corpus/UAT_v6.0.0.rdf" # Input graph
+CORPUS_PATH     = ADS_CORPUS_DIR  # can use ADS_HELIOPHYSICS_CORPUS_DIR for HP-only
+DEVICE          = "cuda" if torch.cuda.is_available() else "cpu"
+RUNS            = pathlib.Path("runs")
+CHECKPOINT_PATH = "/data2/lfretel/best_model_1024.pt"
 
 # Hyperparameters
-RGCN_HIDDEN   = 256
-RGCN_OUT      = 128
+RGCN_HIDDEN   = 64 # 1024
+RGCN_OUT      = 32 # 512
 NUM_LAYERS    = 1 #2     # smoothing of the representations
 DROPOUT       = 0.2 #0.3
-EPOCHS        = 50
+EPOCHS        = 2
 BATCH_SIZE    = 16
-LR            = 1e-2
+LR            = 1e-3
 
 # Results:
 # RGCN_HIDDEN => 128, RGCN_OUT => 56, LR => 1e-3: 0.5 after 3 ep
@@ -137,12 +139,28 @@ model = GNNOntologyClassifier(
 total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print(f"\nTotal of trainable parameters: {total_params:,}")
 
+# Vizualize model architecture
+model.eval()
+with torch.no_grad():
+    dummy_doc = torch.zeros(1, doc_embeddings.shape[1])
+    dummy_logits = model(
+        dummy_doc,
+        graph.x,
+        graph.edge_index,
+        graph.edge_type,
+    )
+make_dot(
+    dummy_logits,
+    params=dict(model.named_parameters()),
+    show_attrs=True,
+    show_saved=True,
+).render("gnn_architecture", format="pdf", cleanup=True)
 
 # ─────────────────────────────────────────────────────────────────────
 # 6. TRAINING
 # ─────────────────────────────────────────────────────────────────────
 
-log_dir = f"{datetime.datetime.now().strftime()}_{RGCN_HIDDEN}h-{RGCN_OUT}o-{NUM_LAYERS}l"
+log_dir = f"{datetime.datetime.now().strftime(format='%Y%m%d-%H%M%S')}_{RGCN_HIDDEN}h-{RGCN_OUT}o-{NUM_LAYERS}l"
 print("\n=== Training ===")
 best_f1 = train(
     model           = model,
@@ -153,7 +171,7 @@ best_f1 = train(
     lr              = LR,
     pos_weight_factor = 1.0,
     device          = DEVICE,
-    checkpoint_path = "best_model.pt",
+    checkpoint_path = CHECKPOINT_PATH,
     log_dir         = RUNS / log_dir
 )
 
