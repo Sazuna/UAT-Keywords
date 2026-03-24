@@ -6,11 +6,11 @@ Load the UATs ontology, vectorize documents, train GNN and infer on our pre-prin
 import torch
 import pathlib
 import datetime
+import os
 from config import BERT_MODEL, THRESHOLD, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
 from ontology_graph import OntologyGraph
 import corpus_loader
 from model import GNNOntologyClassifier
-from torchviz import make_dot
 from train import (
     DocumentOntologyDataset,
     build_multihot,
@@ -22,6 +22,7 @@ import random
 import numpy as np
 import torch
 
+# Reproducibility
 SEED = 42
 
 random.seed(SEED)
@@ -30,6 +31,10 @@ torch.manual_seed(SEED)
 torch.cuda.manual_seed_all(SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
+
+# Reproducibility with concurrent streams with cuBLAS
+torch.use_deterministic_algorithms(True)
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8" # increase library footprint in GPU by 24MiB but does not affect the performance
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -40,16 +45,16 @@ ONTO_PATH       = "../../corpus/UAT_v6.0.0.rdf" # Input graph
 CORPUS_PATH     = ADS_CORPUS_DIR  # can use ADS_HELIOPHYSICS_CORPUS_DIR for HP-only
 DEVICE          = "cuda" if torch.cuda.is_available() else "cpu"
 RUNS            = pathlib.Path("runs")
-CHECKPOINT_PATH = "/data2/lfretel/best_model_1024.pt"
+CHECKPOINT_PATH = "/scratch2/lfretel/GNN_best_model.pt"
 
 # Hyperparameters
-RGCN_HIDDEN   = 64 # 1024
-RGCN_OUT      = 32 # 512
-NUM_LAYERS    = 1 #2     # smoothing of the representations
+RGCN_HIDDEN   = 1024
+RGCN_OUT      = 512
+NUM_LAYERS    = 3 #2     # smoothing of the representations
 DROPOUT       = 0.2 #0.3
-EPOCHS        = 2
-BATCH_SIZE    = 16
-LR            = 1e-3
+EPOCHS        = 10
+BATCH_SIZE    = 32
+LR            = 1e-2
 
 # Results:
 # RGCN_HIDDEN => 128, RGCN_OUT => 56, LR => 1e-3: 0.5 after 3 ep
@@ -100,8 +105,8 @@ print(f"Shape embeddings documents: {doc_embeddings.shape}")
 
 labels_multihot = build_multihot(annotations, onto.node2idx)   # [D, N]
 labels_smoothed = onto.labels_smoothing(labels_multihot,
-                                        alpha = 0.9,
-                                        steps = 2,
+                                        alpha = 0.95,
+                                        steps = 3,
                                         edges = {0, 1, 2, 3}) # broader, narrower, related, self (for weight conservation)
 print("labels multihot std:", labels_multihot.std(dim=0).mean())
 print("labels smoothed std:", labels_smoothed.std(dim=0).mean())
@@ -116,11 +121,6 @@ top = counts.topk(20)
 print("Most frequent nodes in the labels:")
 for idx, count in zip(top.indices, top.values):
     print(f"{count:.0f}  {onto.node_texts[idx][:60]}")
-
-# Et les nœuds liés à AKR sont-ils présents ?
-for uri, idx in onto.node2idx.items():
-    if "kilometric" in onto.node_texts[idx].lower():
-        print(idx, counts[idx].item(), onto.node_texts[idx][:80])
 
 # ─────────────────────────────────────────────────────────────────────
 # 5. MODEL
@@ -138,23 +138,6 @@ model = GNNOntologyClassifier(
 
 total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print(f"\nTotal of trainable parameters: {total_params:,}")
-
-# Vizualize model architecture
-model.eval()
-with torch.no_grad():
-    dummy_doc = torch.zeros(1, doc_embeddings.shape[1])
-    dummy_logits = model(
-        dummy_doc,
-        graph.x,
-        graph.edge_index,
-        graph.edge_type,
-    )
-make_dot(
-    dummy_logits,
-    params=dict(model.named_parameters()),
-    show_attrs=True,
-    show_saved=True,
-).render("gnn_architecture", format="pdf", cleanup=True)
 
 # ─────────────────────────────────────────────────────────────────────
 # 6. TRAINING
@@ -183,7 +166,7 @@ best_f1 = train(
 print("\n=== Inference (exemples) ===")
 
 # Load the best model
-model.load_state_dict(torch.load("best_model.pt", map_location=DEVICE))
+model.load_state_dict(torch.load(CHECKPOINT_PATH, map_location=DEVICE))
 
 new_docs = [
     "Impact of deforestation on global warming and species extinction.",

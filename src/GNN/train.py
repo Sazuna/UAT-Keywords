@@ -163,11 +163,11 @@ def train(
     checkpoint_path: str = "best_model.pt",
     log_dir: str = "runs/gnn",
 ):
-    writer = SummaryWriter(log_dir=log_dir)
+
     # Split train / val
     val_size   = max(1, int(len(dataset) * val_ratio))
     train_size = len(dataset) - val_size
-    train_ds, val_ds = random_split(dataset, [train_size, val_size])
+    train_ds, val_ds = random_split(dataset, [train_size, val_size], generator=torch.Generator().manual_seed(42))
 
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
     val_loader   = DataLoader(val_ds,   batch_size=batch_size, shuffle=False)
@@ -176,6 +176,22 @@ def train(
     graph_x           = graph.x.to(device)
     graph_edge_index  = graph.edge_index.to(device)
     graph_edge_type   = graph.edge_type.to(device)
+
+    # Display architecture in TensorBoard
+    writer = SummaryWriter(log_dir=log_dir)
+    model.eval()
+    with torch.no_grad():
+        dummy_doc = torch.zeros(1, model.scorer.doc_proj[0].in_features).to(device)
+        writer.add_graph(
+            model,
+            input_to_model=(
+                dummy_doc,
+                graph_x,
+                graph_edge_index,
+                graph_edge_type,
+            )
+        )
+    model.train() # Back to train mode
 
     # BCE with positive class weighting (multi-label)
     # num_nodes = graph.num_nodes
@@ -188,20 +204,22 @@ def train(
         total_samples += 1
 
     neg_counts = total_samples - pos_counts
+    #neg_counts = neg_counts.to(device)
+    #pos_counts = pos_counts.to(device)
 
-    pos_weight = torch.ones(num_nodes, device=device) # weight stays to 1 for unused UATs
+    pos_weight = torch.ones(num_nodes)#, device=device) # weight stays to 1 for unused UATs
     mask = pos_counts > 0
     pos_weight[mask] = neg_counts[mask] / pos_counts[mask]
     # pos_weight = neg_counts / (pos_counts)
-    pos_weight = pos_weight.clamp(max=500.0)
+    pos_weight = pos_weight.clamp(max=10.0)
     print("std dev for pos_weight:", pos_weight.std())
     pos_weight = pos_weight.to(device)
 
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-2)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="max", factor=0.5, patience=5
+        optimizer, mode="min", factor=0.3, patience=2
     )
 
     best_f1 = 0.0
@@ -246,16 +264,16 @@ def train(
             best_val_loss = val_loss
             torch.save(model.state_dict(), checkpoint_path)
             print(f"  ✓ Best model saved (val loss={best_val_loss:.4f})")
-        """
+
         if f1 > best_f1:
             best_f1 = f1
-            torch.save(model.state_dict(), checkpoint_path)
-            print(f"  ✓ Best model saved (f1={best_f1:.4f})")
-        """
+            #torch.save(model.state_dict(), checkpoint_path)
+            #print(f"  ✓ Best model saved (f1={best_f1:.4f})")
 
 
 
         # TensorBoard
+        """
         writer.add_scalar("loss/train", avg_loss, epoch)
         writer.add_scalar("loss/val", val_loss, epoch)
         writer.add_scalar("f1/micro", f1, epoch)
@@ -265,6 +283,7 @@ def train(
         #writer.add_scalar("labels/true_per_doc", metrics["true_labels_by_doc"], epoch)
         #writer.add_scalar("labels/pred_per_doc", metrics["pred_labels_by_doc"], epoch)
         writer.add_scalar("lr", optimizer.param_groups[0]["lr"], epoch)
+        """
 
     print(f"\nTraining done. Best micro-F1: {best_f1:.4f}")
     return best_f1
