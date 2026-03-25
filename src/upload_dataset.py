@@ -4,8 +4,10 @@ Upload Dataset to HF
 import torch
 import os
 import json
+import uat_to_corpus
+from huggingface_hub import HfApi
 from datasets import load_dataset, Dataset, DatasetInfo
-from config import ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
+from config import ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR, UATS_JSON, CORPUS_DIR
 from pathlib import Path
 from typing import Iterable, List, Dict
 from torch_geometric.data import Data
@@ -15,6 +17,19 @@ dataset = load_dataset("adsabs/SciX_UAT_Keywords")
 def get_kailas_training_bibcodes():
     # https://huggingface.co/datasets/adsabs/SciX_UAT_keywords
     return dataset["train"]["bibcode"]
+
+UAT_NAMESPACE = "http://astrothesaurus.org/uat/"
+
+if not UATS_JSON.exists():
+    uat_to_corpus.main(CORPUS_DIR / "UAT_v6.0.0.rdf")
+with open(UATS_JSON, "r") as file:
+    uat_dict = json.load(file)
+
+def get_uat_label(uat_uri: str):
+    if uat_uri not in uat_dict:
+        return None
+    return uat_dict[uat_uri].get(str(SKOS.prefLabel), "")[0]
+
 
 kailas_bibcodes = get_kailas_training_bibcodes()
 uat_namespace = "http://astrothesaurus.org/uat/"
@@ -132,7 +147,7 @@ def load_nodes(uat_ontology_path) -> Data:
         nodes_set.add(s_str)
 
     # 2. Node indexation
-    sorted_nodes = sorted(nodes_set)
+    sorted_nodes = sorted(nodes_set, key = lambda x: int(x.split('/')[-1]))
     node2idx = {n: i for i, n in enumerate(sorted_nodes)}
     idx2node = {i: n for n, i in node2idx.items()}
     return node2idx, idx2node
@@ -142,28 +157,51 @@ def main():
     HF_TOKEN = os.environ["HF_TOKEN"]
 
     texts      = []
-    uats       = []
+    uats_uri   = []
     uats_label = []
 
     reader = Reader()
     for text, uat in reader.read_corpus(ADS_CORPUS_DIR):
         texts.append(text)
-        uats.append(uat)
+        uats_filtered = []
+        uat_label = []
+        # uats.append(uat)
+        for uri in uat:
+            label = get_uat_label(uri)
+            if label is None:
+                continue
+            uats_filtered.append(uri)
+            uat_label.append(label)
+        # uats_label.append([get_uat_label(uri) for uri in uat])
+        uats_uri.append(uats_filtered)
+        uats_label.append(uat_label)
 
     node2idx, idx2node = load_nodes("../corpus/UAT_v6.0.0.rdf")
-    multihot = build_multihot(annotations=uats, node2idx=node2idx)
+    multihot = build_multihot(annotations=uats_uri, node2idx=node2idx)
 
     data = {
         "text": texts,
-        "uat_uri": uats,
+        "uat_uri": uats_uri,
         "uat_label": uats_label,
         "multihot": [m.tolist() for m in multihot]
     }
     info = DatasetInfo(
-        description=json.dumps({
-            "idx2label": idx2node,
-            "label2idx": node2idx
-        })
+        description="""Training dataset for multi-label classification of astrophysics literature.
+v6.0.0 of UATs was used to generate the multihot labels (https://github.com/astrothesaurus/UAT/releases/tag/v6.0.0).
+This dataset was generated exclusively from SciX, filtering on the keywords field by combining the UAT's label and numerical value.
+Last update: 2026-03-13"""
+    )
+    with open("label_mapping.json", "w") as f:
+        json.dump({"idx2label": idx2node, "label2idx": node2idx}, f)
+
+    # Push to HF files
+    api = HfApi()
+    api.upload_file(
+        path_or_fileobj="label_mapping.json",
+        path_in_repo="label_mapping.json",
+        repo_id=f"{HF_USERNAME}/UAT_keywords",
+        repo_type="dataset",
+        token=f"{HF_TOKEN}"
     )
     dataset = Dataset.from_dict(data, info=info)
 
