@@ -28,6 +28,8 @@ class Reader():
             if not uats:
                 # Extract UATs from keywords
                 uats = {f"{uat_namespace}{keyword}" for keyword in keywords if keyword.isnumeric()}
+                if uats:
+                    self.has_uat_in_keywords = True
             else:
                 for i, uat in enumerate(uats):
                     if not type(uat) == str or not uat.startswith(uat_namespace):
@@ -37,7 +39,10 @@ class Reader():
 
         @property
         def text(self):
-            return self.title + '. ' + self.abstract + '. ' + ', '.join(self.keywords)
+            res = self.title + '. ' + self.abstract
+            if not self.has_uat_in_keywords:
+                res += ', '.join(self.keywords)
+            return res
 
         def sentencize(self):
             return [t.strip() for t in self.text.split('.') if t.strip()]
