@@ -72,7 +72,7 @@ class OntologyGraph:
         # TODO add a global node (whole graph) with edges between the global node and all nodes
 
         # 2. Node indexation
-        sorted_nodes = sorted(nodes_set)
+        sorted_nodes = sorted(nodes_set, key = lambda x: int(x.split('/')[-1]))
         sorted_nodes.remove(0)
         self.node2idx = {n: i for i, n in enumerate(sorted_nodes)}
         self.idx2node = {i: n for n, i in self.node2idx.items()}

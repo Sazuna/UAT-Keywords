@@ -86,7 +86,7 @@ class OntologyGraph:
             edges_raw.append((s_str, global_node, "node2global")) # connect to global attention node
 
         # 2. Node indexation
-        sorted_nodes = sorted(nodes_set)
+        sorted_nodes = sorted(nodes_set, key = lambda x: int(x.split('/')[-1]))
         self.node2idx = {n: i for i, n in enumerate(sorted_nodes)}
         self.idx2node = {i: n for n, i in self.node2idx.items()}
 
