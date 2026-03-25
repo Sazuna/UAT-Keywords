@@ -25,6 +25,7 @@ class Reader():
             self.journal = journal
             self.abstract = abstract
             self.keywords = keywords
+            self.has_uat_in_keywords = False
             if not uats:
                 # Extract UATs from keywords
                 uats = {f"{uat_namespace}{keyword}" for keyword in keywords if keyword.isnumeric()}
