@@ -9,7 +9,7 @@ import datetime
 import os
 from src.utils.config import BERT_MODEL, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
 from ontology_graph import OntologyGraph
-import corpus_loader
+from src.utils import corpus_loader
 from model import GNNOntologyClassifier
 from train import (
     DocumentOntologyDataset,

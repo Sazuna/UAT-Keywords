@@ -3,8 +3,8 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trai
 from datasets import Dataset
 import torch
 import numpy as np
-import corpus_loader
-import config
+import src.utils.corpus_loader
+import src.utils.config
 import ontology_graph
 
 # Load model and tokenizer

@@ -14,7 +14,7 @@ from encoder import astrobert_encode
 import spacy
 nlp = spacy.load("en_core_web_trf")
 
-from config import BERT_UATS_EMBEDDINGS_FILE, UATS_LABELS_JSON
+from src.utils.config import BERT_UATS_EMBEDDINGS_FILE, UATS_LABELS_JSON
 
 
 from sentence_transformers import SentenceTransformer

@@ -60,16 +60,15 @@ class Reader():
         with open(TEST_CORPUS_FILE, "r") as file:
             lines = file.readlines()
             all_docs = dict()
-            doc = None
+            doc = defaultdict(str)
             state = None
             prefix = ""
             doi = None
             for line in lines:
                 if not line.strip():
                     # New line
-                    if doi:
+                    if doi and doc:
                         all_docs[doi] = doc
-                        print("ADDED:", doi)
                     doc = defaultdict(str)
                     state = None
                 elif line.startswith("%R"): # reference
@@ -116,14 +115,8 @@ class Reader():
                     continue
                 elif state == "DOI":
                     doi = line.removeprefix(prefix).strip()
-                    print("DOI:", doi)
                 elif state:
                     doc[state] += line.removeprefix(prefix).strip() + ' '
-            print(len(all_docs))
-
-            if doi:
-                print("ADDED:", doi)
-                all_docs[doi] = doc # add the last document
 
             for doi, doc in all_docs.items():
                 keywords = doc.get("keywords", "").strip()

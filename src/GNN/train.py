@@ -10,13 +10,14 @@ import math
 from torch.utils.data import Dataset, DataLoader, random_split
 from torch_geometric.data import Data
 from typing import List, Tuple, Dict
-from config import THRESHOLD
 import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score
 from torch.utils.tensorboard import SummaryWriter
 
 from model import GNNOntologyClassifier
 
+# tau (threshold for selection of candidate labels)
+THRESHOLD = 0.1
 
 # ─────────────────────────────────────────────
 # Dataset

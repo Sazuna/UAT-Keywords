@@ -16,7 +16,7 @@ from rdflib import Graph, SKOS, RDF
 from label_match import label_match
 from huggingface_hub import HfApi
 from datasets import Dataset, DatasetInfo
-from config import CORPUS_DIR, UATS_JSON, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR, DATA_DIR
+from src.utils.config import CORPUS_DIR, UATS_JSON, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR, DATA_DIR
 
 
 # Make a query with one keyword
@@ -44,6 +44,7 @@ UAT_NAMESPACE = "http://astrothesaurus.org/uat/"
 # Load UATs
 UAT_ONTOLOGY = "UAT_v6.0.0.rdf"
 uat_to_corpus.main(CORPUS_DIR / UAT_ONTOLOGY)
+
 with open (UATS_JSON, "r") as file:
     uat_labels = json.load(file)
 

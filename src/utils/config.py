@@ -52,3 +52,18 @@ ADS_CORPUS_DIR.mkdir(parents = True, exist_ok = True)
 
 # Our data file
 TEST_CORPUS_FILE = CORPUS_DIR / "pre9forADS_all_annotated.dat"
+
+### Ollama configuration
+OLLAMA_HOST, OLLAMA_MODEL, OLLAMA_MODEL_NAME, SUMMARIZE_MODEL = None, None, None, None
+def configure_ollama():
+    global OLLAMA_HOST
+    if OLLAMA_HOST is not None:
+        # Only configure once
+        return
+    global OLLAMA_MODEL
+    global OLLAMA_MODEL_NAME
+    global SUMMARIZE_MODEL
+    OLLAMA_HOST, OLLAMA_MODEL, OLLAMA_MODEL_NAME, SUMMARIZE_MODEL, CONNECTION_MODE = asyncio.run(connect_to_ollama())
+    print(f"Connected to {CONNECTION_MODE}. Using model {OLLAMA_MODEL}")
+
+OLLAMA_TEMPERATURE = 0 # Higher temperature = less determinist

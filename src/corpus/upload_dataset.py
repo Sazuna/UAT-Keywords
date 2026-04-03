@@ -8,7 +8,7 @@ import uat_to_corpus
 import label_match
 from huggingface_hub import HfApi
 from datasets import load_dataset, Dataset, DatasetInfo
-from config import ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR, UATS_JSON, CORPUS_DIR
+from src.utils.config import ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR, UATS_JSON, CORPUS_DIR
 from pathlib import Path
 from typing import Iterable, List, Dict, Tuple
 from rdflib import Graph, SKOS, RDF

@@ -1,6 +1,6 @@
 """
 ontology_graph.py
-Chargement de l'ontologie Turtle et construction du graphe PyTorch Geometric.
+Load the Turtle ontology and build the PyTorch Geometric graph.
 """
 
 import torch
@@ -12,7 +12,7 @@ from torch_geometric.data import Data
 from transformers import AutoTokenizer, AutoModel
 from typing import Dict, Tuple, List
 from pathlib import Path
-from config import BERT_UATS_EMBEDDINGS_FILE, BERT_DOCS_EMBEDDINGS_FILE
+from src.utils.config import BERT_UATS_EMBEDDINGS_FILE, BERT_DOCS_EMBEDDINGS_FILE
 
 
 SKOS_BROADER = SKOS.broader

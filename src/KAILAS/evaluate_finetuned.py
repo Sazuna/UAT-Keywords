@@ -6,9 +6,10 @@ import torch
 import numpy as np
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from datasets import Dataset
-import corpus_loader
-import config
+import src.utils.corpus_loader
+import src.utils.config
 import ontology_graph
+exit()
 
 # ── Config ────────────────────────────────────────────────────────────────────
 CHECKPOINT_PATH = "./kailas-finetuned/checkpoint-21270"  # ← à adapter

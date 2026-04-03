@@ -5,13 +5,11 @@ https://zenodo.org/records/17460502
 """
 import json
 import os
-from typing import Iterable
-from collections import defaultdict
-from config import ADS_HELIO_CORPUS_DIR, TEST_CORPUS_FILE
+from src.utils.config import ADS_HELIO_CORPUS_DIR, TEST_CORPUS_FILE
 from tqdm import tqdm
 from uat_utils import *
 from document import Document
-from corpus_loader import Reader
+from src.utils.corpus_loader import Reader
 
 from transformers import pipeline
 classifier = pipeline("text-classification", model = "adsabs/KAILAS")
@@ -128,11 +126,9 @@ def compute_on_test_corpus():
         output_uats = set(candidate_uris)
         print("Output UATs:", ', '.join([f"{get_uat_label(u)} ({u})" for u in sorted(output_uats)]))
         print("\n")
-        # TP
         TP += len(papers_uats & output_uats)
         FP += len(output_uats - papers_uats)
         FN += len(papers_uats - output_uats)
-
     print("Test corpus results")
     print("TP:", TP, "FP:", FP, "FN:", FN)
     precision = TP / (TP + FP)

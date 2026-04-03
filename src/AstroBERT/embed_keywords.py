@@ -7,10 +7,13 @@ import numpy as np
 from time import time
 from rdflib import SKOS, DCTERMS
 import encoder
+from src.corpus import uat_to_corpus
 from src.utils.llm_connection import encode as llm_encode
-from src.utils.config import UATS_JSON, UATS_LABELS_JSON, BERT_UATS_EMBEDDINGS_FILE
+from src.utils.config import UATS_JSON, CORPUS_DIR, UATS_LABELS_JSON, BERT_UATS_EMBEDDINGS_FILE
 
 def main(only_label: bool = False):
+    if not UATS_JSON.exists():
+        uat_to_corpus.main(CORPUS_DIR / "UAT_v6.0.0.rdf")
     with open(UATS_JSON, "r") as file:
         uats = json.load(file)
 

@@ -4,8 +4,8 @@ import json
 import os
 import requests
 import hashlib
-from config import configure_ollama, OLLAMA_TEMPERATURE, BERT_MODEL
-import config
+from src.utils.config import configure_ollama, OLLAMA_TEMPERATURE, BERT_MODEL
+import src.utils.config
 
 cache = dict()
 loaded = False

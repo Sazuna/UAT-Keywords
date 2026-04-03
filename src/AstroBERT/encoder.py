@@ -1,6 +1,6 @@
 import torch
 from transformers import BertModel, BertTokenizer
-from config import BERT_MODEL, ENCODER_MAX_LENGTH
+from src.utils.config import BERT_MODEL, ENCODER_MAX_LENGTH
 import numpy as np
 
 tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)

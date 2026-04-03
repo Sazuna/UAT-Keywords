@@ -2,10 +2,10 @@
 Find UATs by naive textual match
 """
 from typing import Set
-from config import UATS_JSON, CORPUS_DIR
 from rdflib import SKOS
+from src.utils.config import UATS_JSON, CORPUS_DIR
+from src.corpus import uat_to_corpus
 import json
-import uat_to_corpus
 import regex
 
 if not UATS_JSON.exists():
@@ -30,6 +30,10 @@ for uat, data in uat_dict.items():
 
 # Sort by length to make the selection greedy
 sorted_labels = sorted(label2uat.keys(), key=len, reverse=True)
+
+# This category matches with too many things (false positive) so we remove it
+sorted_labels.remove("of star")
+sorted_labels.remove("of stars")
 
 # Escape special characters
 escaped_labels = [regex.escape(label) for label in sorted_labels]
@@ -61,3 +65,18 @@ def label_match(text: str) -> Set[str]:
             matches_by_longest.append(m)
     uats = {label2uat[label.lower()] for label in matches_by_longest}
     return uats
+
+def main():
+    """
+    Try to execute label_match on our test corpus
+    """
+    from src.utils import corpus_loader
+    reader = corpus_loader.Reader()
+    for document in reader.read_pre9forADS():
+        predicted = label_match(document.text)
+        print("text:", document.text)
+        print("pred:", predicted)
+        print("true:", document.uats)
+
+if __name__ == "__main__":
+    main()

@@ -5,8 +5,8 @@ Transforms UATs into text chunks
 import pathlib
 from rdflib import Graph, SKOS, OWL, DCTERMS, Literal, XSD
 from collections import defaultdict
-from llm_connection import generate
-from config import CORPUS_DIR, UATS_JSON
+from src.utils.llm_connection import generate
+from src.utils.config import CORPUS_DIR, UATS_JSON
 import json
 
 
@@ -62,7 +62,6 @@ def main(uat_file: pathlib.Path):
         #if not SKOS.definition in values:
         #    definition = augment_definition(str(values[SKOS.prefLabel][0]), key = str(uat))
         #    values[SKOS.definition] = [definition]
-
 
 
     with open(UATS_JSON, "w") as file:
