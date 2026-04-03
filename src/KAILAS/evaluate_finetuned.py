@@ -50,9 +50,9 @@ def tokenize(batch):
 
 validation_docs, validation_labels = [], []
 reader = corpus_loader.Reader()
-for document, annotation in reader.read_pre9forADS():
-    validation_docs.append(document)
-    validation_labels.append(annotation)
+for document in reader.read_pre9forADS():
+    validation_docs.append(document.text)
+    validation_labels.append(document.uats)
 
 validation_dataset = Dataset.from_dict({"text": validation_docs, "labels": validation_labels})
 validation_dataset = validation_dataset.map(tokenize, batched=True)

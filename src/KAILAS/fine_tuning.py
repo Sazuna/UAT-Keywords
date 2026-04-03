@@ -25,7 +25,7 @@ def tokenize(batch):
     tokens["labels"] = build_multihot(batch["labels"]).tolist()
     return tokens
 
-onto = ontology_graph.OntologyGraph(config.CORPUS_DIR / "UAT_v6.0.0.rdf")
+onto = ontology_graph.OntologyGraph(config.CORPUS_DIR / "UAT_v5.1.0.rdf")
 node2idx = onto.node2idx # TODO use those instead of KAILAS' label2id & id2label
 idx2node = onto.idx2node
 UAT_NAMESPACE = "http://astrothesaurus.org/uat/"
@@ -116,9 +116,9 @@ train_dataset.set_format("torch")
 validation_docs = []
 validation_labels = []
 
-for document, annotation in reader.read_pre9forADS():
-    validation_docs.append(document)
-    validation_labels.append(annotation)
+for document in reader.read_pre9forADS():
+    validation_docs.append(document.text)
+    validation_labels.append(document.uats)
 
 validation_data = {
     "text": validation_docs,

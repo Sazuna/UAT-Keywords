@@ -111,10 +111,14 @@ def compute_on_test_corpus():
     corpus_reader = Reader()
 
     TP, FP, FN = 0, 0, 0
-    for doi, title, abstract, keywords, journal, uats in corpus_reader.read_pre9forADS():
+    for document in corpus_reader.read_pre9forADS():
+        doi = document.bibcode
+        text = document.text
+        title = document.title
+        uats = document.uats
         papers_uats = set(uats)
         candidate_uris = []
-        for sentence in sentencize(abstract):
+        for sentence in sentencize(text):
             res = classifier(sentence)
             candidate_uris.append(res[0]["label"])
 

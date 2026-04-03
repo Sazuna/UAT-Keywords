@@ -50,7 +50,7 @@ class Reader():
             return [t.strip() for t in self.text.split('.') if t.strip()]
 
 
-    def read_pre9forADS(self) -> Iterable[tuple]:
+    def read_pre9forADS(self) -> Iterable[Document]:
         """
         Load our unpublished preprint corpus. Yield tuples (doc_str, list_of_uats).
 
@@ -123,7 +123,7 @@ class Reader():
                 abstract = doc.get("abstract", "").strip()
                 uats = [u.strip() for u in doc.get("uats", "").split(',') if u.strip()]
                 document = Reader.Document(doi, title, journal, abstract, keywords, uats)
-                yield document.text, document.uats
+                yield document
                 # yield bibcode, title, abstract, keywords, journal, uats
 
 
