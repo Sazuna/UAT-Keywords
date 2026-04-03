@@ -7,8 +7,8 @@ import numpy as np
 from time import time
 from rdflib import SKOS, DCTERMS
 import encoder
-from llm_connection import encode as llm_encode
-from config import UATS_JSON, UATS_LABELS_JSON, BERT_UATS_EMBEDDINGS_FILE, CACHE_DIR
+from src.utils.llm_connection import encode as llm_encode
+from src.utils.config import UATS_JSON, UATS_LABELS_JSON, BERT_UATS_EMBEDDINGS_FILE
 
 def main(only_label: bool = False):
     with open(UATS_JSON, "r") as file:

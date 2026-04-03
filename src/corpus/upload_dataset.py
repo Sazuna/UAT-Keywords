@@ -5,12 +5,12 @@ import torch
 import os
 import json
 import uat_to_corpus
+import label_match
 from huggingface_hub import HfApi
 from datasets import load_dataset, Dataset, DatasetInfo
 from config import ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR, UATS_JSON, CORPUS_DIR
 from pathlib import Path
-from typing import Iterable, List, Dict
-from torch_geometric.data import Data
+from typing import Iterable, List, Dict, Tuple
 from rdflib import Graph, SKOS, RDF
 dataset = load_dataset("adsabs/SciX_UAT_Keywords")
 
@@ -124,7 +124,7 @@ def build_multihot(
                 print(f"[Warning] Unknown URI in node2idx : {uri}")
     return multihot
 
-def load_nodes(uat_ontology_path) -> Data:
+def load_nodes(uat_ontology_path) -> Tuple[Dict, Dict]:
     rdf = Graph()
     rdf.parse(uat_ontology_path, format="xml")
 
@@ -157,33 +157,54 @@ def main():
     HF_TOKEN = os.environ["HF_TOKEN"]
 
     texts      = []
-    uats_uri   = []
-    uats_label = []
+    uats_uri   = [] # verified
+    uats_label = [] # verified
+    uats_uri_extended   = [] # extended by label match
+    uats_label_extended = [] # extended by label match
+    all_uats_uri   = [] # all UAT uris (verified + extended)
+    all_uats_label = [] # all UAT labels (verified + extended)
 
     reader = Reader()
     for text, uat in reader.read_corpus(ADS_CORPUS_DIR):
         texts.append(text)
-        uats_filtered = []
-        uat_label = []
+        uat_uri_filtered = []
+        uat_label_filtered = []
         # uats.append(uat)
         for uri in uat:
             label = get_uat_label(uri)
             if label is None:
                 continue
-            uats_filtered.append(uri)
-            uat_label.append(label)
+            uat_uri_filtered.append(uri)
+            uat_label_filtered.append(label)
         # uats_label.append([get_uat_label(uri) for uri in uat])
-        uats_uri.append(uats_filtered)
-        uats_label.append(uat_label)
+        uats_uri.append(uat_uri_filtered)
+        uats_label.append(uat_label_filtered)
+
+        # extend URIs with labels in the text
+        uat_uri_extended = label_match.label_match(text)
+        uat_uri_extended = sorted(set(uat_uri_extended) - set(uat_uri_filtered), key=lambda x: int(x.split('/')[-1])) # already in author's UAT
+        uat_label_extended = [get_uat_label(uri) for uri in uat_uri_extended]
+
+        uats_uri_extended.append(uat_uri_extended)
+        uats_label_extended.append(uat_label_extended)
+
+        all_uats_uri.append(uat_uri_filtered + uat_uri_extended)
+        all_uats_label.append(uat_label_filtered + uat_label_extended)
 
     node2idx, idx2node = load_nodes("../corpus/UAT_v6.0.0.rdf")
-    multihot = build_multihot(annotations=uats_uri, node2idx=node2idx)
+    multihot = build_multihot(annotations=uats_uri,
+                              node2idx=node2idx)
+    multihot_extended = build_multihot(annotations=all_uats_uri,
+                                       node2idx=node2idx)
 
     data = {
         "text": texts,
         "uat_uri": uats_uri,
         "uat_label": uats_label,
-        "multihot": [m.tolist() for m in multihot]
+        "multihot": [m.tolist() for m in multihot],
+        "uat_uri_extended": uats_uri_extended,
+        "uat_label_extended": uats_label_extended,
+        "multihot_extended": multihot_extended,
     }
     info = DatasetInfo(
         description="""Training dataset for multi-label classification of astrophysics literature.

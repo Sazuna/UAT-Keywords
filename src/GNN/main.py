@@ -7,7 +7,7 @@ import torch
 import pathlib
 import datetime
 import os
-from config import BERT_MODEL, THRESHOLD, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
+from src.utils.config import BERT_MODEL, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
 from ontology_graph import OntologyGraph
 import corpus_loader
 from model import GNNOntologyClassifier
@@ -48,9 +48,9 @@ RUNS            = pathlib.Path("runs")
 CHECKPOINT_PATH = "/scratch2/lfretel/GNN_best_model.pt"
 
 # Hyperparameters
-RGCN_HIDDEN   = 1024
-RGCN_OUT      = 512
-NUM_LAYERS    = 3 #2     # smoothing of the representations
+RGCN_HIDDEN   = 128
+RGCN_OUT      = 56
+NUM_LAYERS    = 2     # smoothing of the representations
 DROPOUT       = 0.2 #0.3
 EPOCHS        = 10
 BATCH_SIZE    = 32
@@ -190,7 +190,7 @@ results = predict(
     graph          = graph,
     idx2node       = onto.idx2node,
     node_texts     = onto.node_texts,
-    threshold      = THRESHOLD,    # variable (use tau = 0.01 or tau = 0.05 for 2411 labels)
+    threshold      = 0.05,    # variable (use tau = 0.01 or tau = 0.05 for 2411 labels)
     top_k          = 5,
     device         = DEVICE,
 )
