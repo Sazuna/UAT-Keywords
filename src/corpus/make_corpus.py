@@ -6,17 +6,17 @@ import json
 import os
 import regex
 import requests
-import uat_to_corpus
 import torch
 import atexit
 from tqdm import tqdm
 from typing import List, Tuple, Dict
 from urllib.parse import urlencode
 from rdflib import Graph, SKOS, RDF
-from label_match import label_match
 from huggingface_hub import HfApi
 from datasets import Dataset, DatasetInfo
 from src.utils.config import CORPUS_DIR, UATS_JSON, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR, DATA_DIR
+from src.label_match.label_match import label_match
+from src.corpus import uat_to_corpus
 
 
 # Make a query with one keyword
@@ -446,9 +446,9 @@ def main(categories: str = HP_CATEGORIES,
                 bibcodes=all_bibcodes,
                 texts=all_texts,
                 uats_uri=all_uat_uris,
-                all_uat_labels=all_uat_labels,
+                uat_labels=all_uat_labels,
                 uat_uris_extended=all_uat_uris_extended,
-                all_uat_labels_extended=all_uat_labels_extended,
+                uat_labels_extended=all_uat_labels_extended,
                 hf_dataset=hf_dataset)
             
     # download(HP_CATEGORIES, ADS_HELIO_CORPUS_DIR)
