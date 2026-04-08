@@ -2,7 +2,7 @@
 # More infos: https://ui.adsabs.harvard.edu/help/data_faq/tagged-format
 
 %R 2023pre9.conf.103094B
-%A Boudouma, A.; Zarka, P.;	Magalh\~{a}es, F. P.; Marques, M. S.; Louis, C. K.; Echer, E.; Lamy, L.; Prang\'{e} R.
+%A Boudouma, A.; Zarka, P.; Magalh\~{a}es, F. P.; Marques, M. S.; Louis, C. K.; Echer, E.; Lamy, L.; Prang\'{e} R.
 %F AA (LESIA, Observatoire de Paris, CNRS, PSL, Sorbonne Universit\'{e}, Universit\'{e} de Paris, Meudon, France)
 AB (LESIA, Observatoire de Paris, CNRS, PSL, Sorbonne Universit\'{e}, Universit\'{e} de Paris, Meudon, France;
     Station de Radioastronomie de Nan\c{c}ay, USN, Observatoire de Paris, CNRS, PSL, Universit\'{e} d'Orl\'{e}ans, Nan\c{c}ay, France)
@@ -18,7 +18,7 @@ AF (Instituto Nacional de Pesquisas Espaciais-INPE, Sao Jos\'{e} dos Campos, Bra
 %I DOI: 10.25546/103094
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Jupiter, HOM, Cassini
-%U 1528, 998, 873, 2089
+%U 2192, 997, 998, 1426, 873
 %Z Bonfond B., et al., 2015, Annales Geophysicae, 33, 1203
    Hess S., Echer E., Zarka P., Lamy L., Delamere P., 2014, Planetary and Space Science, 99, 136
    Kivelson M. G., Southwood D. J., 2005, Journal of Geophysical Research: Space Physics, 110, A12209
@@ -45,7 +45,7 @@ AH (Department of Physics and Astronomy, University of Iowa, Iowa City, IA, USA)
 %I DOI: 10.25546/103095
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Jupiter, Juno
-%U 1528, 873, 998, 2089
+%U 873, 997, 2192, 998, 1261, 1191, 2089
 %Z Al Saati S., et al., 2022, Journal of Geophysical Research: Space Physics, 127, e2022JA030586
     Allegrini F., et al., 2020, Journal of Geophysical Research: Space Physics, 125, e2019JA027693
     Connerney J. E. P., Acuna M. H., Ness N. F., 1981, Journal of Geophysical Research: Space Physics, 86, 8370
@@ -87,7 +87,7 @@ AH (School of Cosmic Physics, DIAS Dunsink Observatory, Dublin Institute for Adv
 %I DOI: 10.25546/103099
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Magnetospheric physics, Planetary radio emission, Saturn
-%U 1528, 1426, 998, 2089
+%U 1426, 1191, 1255, 997, 998
 %Z Cecconi B., Lamy L., Zarka P., Prang\'e R., Kurth W. S., Louarn P., 2009, Journal of Geophysical Research (Space Physics), 114, A03215
     Fischer G., Gurnett D. A., Lecacheux A., Macher W., Kurth W. S., 2007, Journal of Geophysical Research (Space Physics), 112, A12308
     Fischer G., et al., 2009, Journal of Geophysical Research (Space Physics), 114, A08216
@@ -122,7 +122,7 @@ AF (Institute of Physics/IGAM, University of Graz, Universitätsplatz 5, A-8010 
 %I DOI: 10.25546/103090
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Extra-solar planets, Exoplanets, Exoplanetary radio emission, Magnetospheric physics
-%U 484, 498, 998, 2089, 2177
+%U 998, 994, 498, 1610, 2177, 997
 %Z Daley-Yates S., Stevens I. R., 2017, Astron. Nachr., 338, 881
    Daley-Yates S., Stevens I. R., 2018, MNRAS, 479, 1194
    Ergun R. E., Carlson C. W., McFadden J. P., Delory G. T., Strangeway R. J., Pritchett P. L., 2000, ApJ, 538, 456
@@ -162,7 +162,7 @@ AK (Georgia Amateur Radio Astronomy Observatory, Jasper, GA 30143)
 AL (Heliotown Observatory, Lamy, NM 87540)
 AM (LGM Radio Alachua, Alachua, FL 32615)
 AN (Easley, SC 29640)
-AO (Dalton State College, Dalton, GA 30720)	
+AO (Dalton State College, Dalton, GA 30720) 
 %J Planetary, Solar and Heliospheric Radio Emissions IX, edited by C. K. Louis, C. M. Jackman, G. Fischer, A. H. Sulaiman, P. Zucca, Dublin Institute for Advanced Studies, Trinity College Dublin, Dublin, Ireland
 %D 00/2023
 %T The radio JOVE Project 2.0
@@ -170,7 +170,7 @@ AO (Dalton State College, Dalton, GA 30720)
 %I DOI: 10.25546/103096
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Jupiter, Instruments and techniques
-%U 1528, 873, 998, 2089, 1355, 1360
+%U 1338, 1340, 1343, 2165, 1358
 %Z Bastian T. S., Benz A. O., Gary D. E., 1998, Annu. Rev. Astron. Astrophys., 36, A30
    Garcia L., 2022, Radio JOVE Bulletin March 2022, Special Issue
    Higgins C., 2022, The Radio JOVE Project Website, 2022
@@ -193,7 +193,7 @@ AF (LAM, Pytheas, Aix Marseille Universite, CNRS, CNES, 38 Rue Frederic Joliot C
 %I DOI: 10.25546/103100
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Saturn,Solar wind/magnetosphere interactions
-%U 1528, 998, 1426, 1534, 1472
+%U 1426, 997, 1534, 1472, 1246, 1255, 1544, 824, 998
 %Z Andrews D. J., Coates A. J., Cowley S. W. H., Dougherty M. K., Lamy L., Provan G., Zarka P., 2010, Journal of Geophysical Research (Space Physics), 115, A12252
    Badman S. V., Cowley S. W. H., Lamy L., Cecconi B., Zarka P., 2008, Annales Geophysicae, 26, 3641
    Bradley T. J., et al., 2020, Journal of Geophysical Research (Space Physics), 125, e27907
@@ -254,7 +254,7 @@ AF (School of Cosmic Physics, DIAS Dunsink Observatory, Dublin Institute for Adv
 %I DOI: 10.25546/103101
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Saturn
-%U 1528, 1426, 998, 2089
+%U 998, 997, 1426, 1544, 2056
 %Z Azari A. R., et al., 2018, Journal of Geophysical Research: Space Physics, 123, 4692
     Bader A., Kinrade J., Badman S. V. B., Paranicas C., Constable D. A., Mitchell D. G., 2021, Journal of Geophysical Research: Space Physics, 126, e2020JA028908
     Bradley T. J., Cowley S. W. H., Bunce E. J., Smith A. W., Jackman C. M., Provan G., 2018, Journal of Geophysical Research: Space Physics, 123, 9476
@@ -295,7 +295,7 @@ AF (School of Cosmic Physics, DIAS Dunsink Observatory, Dublin Institute for Adv
 
 %R 2023pre9.conf.103104K
 %A Kurth, W. S.; Hospodarsky, G. B.; Faden, J. B.; Sulaiman, A. H.; Mauk, B. H.; Clark, G.; Allegrini, F.; Connerney, J. E. P.; Bolton, S. J.
-%F AA (Department of Physics and Astronomy, University of Iowa, Iowa City, IA 52241 USA)	
+%F AA (Department of Physics and Astronomy, University of Iowa, Iowa City, IA 52241 USA)    
 AB (Department of Physics and Astronomy, University of Iowa, Iowa City, IA 52241 USA)
 AC (Department of Physics and Astronomy, University of Iowa, Iowa City, IA 52241 USA)
 AD (Minnesota Institute for Astrophysics, School of Physics and Astronomy, University of Minnesota),
@@ -311,7 +311,7 @@ AI (Southwest Research Institute, San Antonio, TX, USA)
 %I DOI: 10.25546/103104
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Jupiter, Jovian satellites, Io, Magnetosphere interactions with satellites and rings
-%U 1528, 998, 873, 872, 627, 2190, 1254
+%U 2190, 872, 627, 997, 873, 1544, 994, 998
 %Z Bolton S. J., Thorne R. M., Gurnett D. A., Kurth W. S., Williams D. J., 1997,Geophysical Research Letters, 24, 2123
    Burch J. L., et al., 2005, Geophysical Research Letters, 32, L14S02
    Connerney J. E. P., Acuna M. H., Ness N. F., 1981, Journal of Geophysical Research, 86, 8370
@@ -351,7 +351,7 @@ AB (Department of Physics and Astronomy, University of Iowa, Iowa City, IA 52242
 %I DOI: 10.25546/103093
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Interstellar radio emission, Voyager, Plasma waves and instabilities, Interstellar
-%U 840, 851, 2089
+%U 851, 847, 1544, 848, 707, 711, 2089 
 %Z Burlaga L. F., Ness N. F., Stone E. C., 2013, Science, 341, 147
    Burlaga L. F., Kurth W. S., Gurnett D. A., Berdichevsky D. B., Jian L. K., Ness N. F., Park J., Szabo A., 2021, Astrophysical Journal, 911, 61
    Gurnett D. A., Kurth W. S., 2019, Nature Astronomy, 3, 1024
@@ -379,41 +379,41 @@ AB (Department of Physics and Astronomy, Dartmouth College, Hanover, New Hampshi
 %I DOI: 10.25546/103087
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Earth, AKR, Solar wind/magnetosphere interactions
-%U 1528, 998, 2089, 439, 1473
+%U 860, 2185, 2192, 997, 1544, 998
 %Z Bilitza D., Altadill D., Truhlik V., Shubin V., Galkin I., Reinisch B., Huang X., 2017, Space Weather, 15, 418
-	Chian A. C. L., Lopes S. R., Alves M. V., 1994, Astronomy and Astrophysics, 290, L13
-	Ergun R. E., Carlson C. W., McFadden J. P., Delory G. T., Strangeway R. J., Pritchett P. L., 2000, The Astrophysical Journal, 538, 456
-	Fogg A. R., Jackman C. M., Waters J. E., Bonnin X., Lamy L., Cecconi B., Issautier K., Louis C. K., 2022, Journal of Geophysical Research (Space Physics), 127, e30209
-	Gjerloev J. W., 2012, Journal of Geophysical Research (Space Physics), 117, A09213
-	Gurnett D. A., 1974, Journal of Geophysical Research, 79, 4227
-	Gustafsson G., Papitashvili N. E., Papitashvili V. O., 1992, Journal of Atmospheric and Terrestrial Physics, 54, 1609
-	Kaiser M. L., Alexander J. K., 1977, Journal of Geophysical Research, 82, 3273
-	Krasovskiy V. L., Kushnerevskiy Y. V., Mugulin V. V., Orayevskiy V. N., Pulinets S. A., 1983, Geomagnetism and Aeronomy, 23, 702
-	LaBelle J., Anderson R. R., 2011, Geophysical Research Letters, 38, L04104
-	LaBelle J., McAdams K. L., Trimpi M. L., 1999, Journal of Geophysical Research, 104, 28101
-	LaBelle J., et al., 2015, Journal of Geophysical Research (Space Physics), 120, 2061
-	LaBelle J., Yearby K., Pickett J. S., 2022, Journal of Geophysical Research (Space Physics), 127, e2021JA029399
-	Liou K., Meng C. I., Lui A. T. Y., Newell P. T., Anderson R. R., 2000, Journal of Geophysical Research, 105, 25325
-	Morioka A., Oya H., Miyaoka H., Ono T., Obara T., 1988, Journal of Geomagnetism and Geoelectricity, 40, 923
-	Morioka A., et al., 2007, Journal of Geophysical Research (Space Physics), 112, A06245
-	Morioka A., et al., 2011, Journal of Geophysical Research (Space Physics), 116, A04211
-	Morioka A., Miyoshi Y., Kasaba Y., Sato N., Kadokura A., Misawa H., Miyashita Y., Mann I., 2014, Journal of Geophysical Research (Space Physics), 119, 1044
-	Mutel R., Gurnett D., Christopher I., 2004, Annales Geophysicae, 22, 2625
-	Mutel R. L., Christopher I. W., Pickett J. S., 2008, Geophysical Research Letters, 35, L07104
-	Mutel R. L., Christopher I. W., Menietti J. D., Gurnett D. A., Pickett J. S., Masson A., Fazakerley A., Lucek E., 2011, in Planetary, Solar and Heliospheric Radio Emissions (PRE VII), pp 241–252
-	Newell P. T., Gjerloev J. W., 2011a, Journal of Geophysical Research (Space Physics), 116, A12211
-	Newell P. T., Gjerloev J. W., 2011b, Journal of Geophysical Research (Space Physics), 116, A12232
-	Oya H., Miyaoka H., Miyatake S., 1979, in Antarctica, Antarctic Record, 64, 30
-	Oya H., Morioka A., Obara T., 1985, Journal of Geomagnetism and Geoelectricity, 37, 237
-	Parrot M., Berthelier J.-J., 2012, Journal of Geophysical Research (Space Physics), 117, A10314
-	Parrot M., Nˇemec F., Santolik O., 2022, Journal of Geophysical Research (Space Physics), 127, e30495
-	Pritchett P. L., Strangeway R. J., Carlson C. W., Ergun R. E., McFadden J. P., Delory G. T., 1999, Journal of Geophysical Research, 104, 10317
-	Shutte N., Prutensky I., Pulinets S., Kløos Z., Rothkaehl H., 1997, Journal of Geophysical 	Research, 102, 2105
-	Treumann R. A., 2006, The Astronomy and Astrophysics Review, 13, 229
-	Waters J. E., et al., 2022, Journal of Geophysical Research (Space Physics), 127, e30449
-	Wu C. S., Yoon P. H., Freund H. P., 1989, Geophysical Research Letters, 16, 1461
-	Xiao F., et al., 2022, Geophysical Research Letters, 49, e99571
-	Ziebell L. F., Wu C. S., Yoon P. H., 1991, Journal of Geophysical Research, 96, 1495
+    Chian A. C. L., Lopes S. R., Alves M. V., 1994, Astronomy and Astrophysics, 290, L13
+    Ergun R. E., Carlson C. W., McFadden J. P., Delory G. T., Strangeway R. J., Pritchett P. L., 2000, The Astrophysical Journal, 538, 456
+    Fogg A. R., Jackman C. M., Waters J. E., Bonnin X., Lamy L., Cecconi B., Issautier K., Louis C. K., 2022, Journal of Geophysical Research (Space Physics), 127, e30209
+    Gjerloev J. W., 2012, Journal of Geophysical Research (Space Physics), 117, A09213
+    Gurnett D. A., 1974, Journal of Geophysical Research, 79, 4227
+    Gustafsson G., Papitashvili N. E., Papitashvili V. O., 1992, Journal of Atmospheric and Terrestrial Physics, 54, 1609
+    Kaiser M. L., Alexander J. K., 1977, Journal of Geophysical Research, 82, 3273
+    Krasovskiy V. L., Kushnerevskiy Y. V., Mugulin V. V., Orayevskiy V. N., Pulinets S. A., 1983, Geomagnetism and Aeronomy, 23, 702
+    LaBelle J., Anderson R. R., 2011, Geophysical Research Letters, 38, L04104
+    LaBelle J., McAdams K. L., Trimpi M. L., 1999, Journal of Geophysical Research, 104, 28101
+    LaBelle J., et al., 2015, Journal of Geophysical Research (Space Physics), 120, 2061
+    LaBelle J., Yearby K., Pickett J. S., 2022, Journal of Geophysical Research (Space Physics), 127, e2021JA029399
+    Liou K., Meng C. I., Lui A. T. Y., Newell P. T., Anderson R. R., 2000, Journal of Geophysical Research, 105, 25325
+    Morioka A., Oya H., Miyaoka H., Ono T., Obara T., 1988, Journal of Geomagnetism and Geoelectricity, 40, 923
+    Morioka A., et al., 2007, Journal of Geophysical Research (Space Physics), 112, A06245
+    Morioka A., et al., 2011, Journal of Geophysical Research (Space Physics), 116, A04211
+    Morioka A., Miyoshi Y., Kasaba Y., Sato N., Kadokura A., Misawa H., Miyashita Y., Mann I., 2014, Journal of Geophysical Research (Space Physics), 119, 1044
+    Mutel R., Gurnett D., Christopher I., 2004, Annales Geophysicae, 22, 2625
+    Mutel R. L., Christopher I. W., Pickett J. S., 2008, Geophysical Research Letters, 35, L07104
+    Mutel R. L., Christopher I. W., Menietti J. D., Gurnett D. A., Pickett J. S., Masson A., Fazakerley A., Lucek E., 2011, in Planetary, Solar and Heliospheric Radio Emissions (PRE VII), pp 241–252
+    Newell P. T., Gjerloev J. W., 2011a, Journal of Geophysical Research (Space Physics), 116, A12211
+    Newell P. T., Gjerloev J. W., 2011b, Journal of Geophysical Research (Space Physics), 116, A12232
+    Oya H., Miyaoka H., Miyatake S., 1979, in Antarctica, Antarctic Record, 64, 30
+    Oya H., Morioka A., Obara T., 1985, Journal of Geomagnetism and Geoelectricity, 37, 237
+    Parrot M., Berthelier J.-J., 2012, Journal of Geophysical Research (Space Physics), 117, A10314
+    Parrot M., Nˇemec F., Santolik O., 2022, Journal of Geophysical Research (Space Physics), 127, e30495
+    Pritchett P. L., Strangeway R. J., Carlson C. W., Ergun R. E., McFadden J. P., Delory G. T., 1999, Journal of Geophysical Research, 104, 10317
+    Shutte N., Prutensky I., Pulinets S., Kløos Z., Rothkaehl H., 1997, Journal of Geophysical  Research, 102, 2105
+    Treumann R. A., 2006, The Astronomy and Astrophysics Review, 13, 229
+    Waters J. E., et al., 2022, Journal of Geophysical Research (Space Physics), 127, e30449
+    Wu C. S., Yoon P. H., Freund H. P., 1989, Geophysical Research Letters, 16, 1461
+    Xiao F., et al., 2022, Geophysical Research Letters, 49, e99571
+    Ziebell L. F., Wu C. S., Yoon P. H., 1991, Journal of Geophysical Research, 96, 1495
 
 %R 2023pre9.conf.103097L
 %A Lamy, L.; Duchêne, A.; Mauduit, E.; Zarka, P.; Yerin, S.; Louis, C. K.; Griessmeier, J.-M.; Girard, J.; Theureau, G.
@@ -442,35 +442,35 @@ AI (LPC2E, CNRS, Universit\'{e} d′Orl\'{e}ans, Orl\'{e}ans, France;
 %I DOI: 10.25546/103097
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Jupiter, Jovian satellites, Europa, Ganymede, Magnetosphere interactions with satellites and rings
-%U 1528, 998, 2089, 873, 872, 627, 2189, 2188
+%U 873, 627, 2190, 872, 2192, 997, 2188, 998, 2189
 %Z Bigg E. K., 1966, Planet. & Sp. Sci., 14, 741
-	Boischot A., et al., 1980, Icarus, 43, 399
-	Bondonneau L., et al., 2021, Astron. & Asrophys., 652, A34
-	Bonfond B., Saur J., Grodent D., Badman S. V., Bisikalo D., Shematovich V., G\'{e}rardJ. C., Radioti A., 2017, Journal of Geophysical Research (Space Physics), 122, 7985
-	Cecconi B., Coffre A., Loh A., Denis L., Lamy L., 2020, , https://doi.org/10.25935/2EAP-W742
-	Cecconi B., Aicardi S., Lamy L., 2023, Frontiers in Astronomy and Space Sciences (Space Physics), pp 1–7
-	Connerney J. E. P., et al., 2018, Geophys. Res. Let., 45, 2590
-	Connerney J. E. P., Timmins S., Herceg M., Joergensen J. L., 2020, Journal of Geophysical Research (Space Physics), 125, e28138
-	Duchene A., Lamy L., Loh A., Cecconi B., Viou C., Renaud P., 2022, https:// doi.org/10.25935/MPF0-V756
-	Hess S., Zarka P., Mottez F., 2007, Planet. & Sp. Sci., 55, 89
-	Hess S., Cecconi B., Zarka P., 2008a, Geophys. Res. Let., 35, L13107
-	Hess S., Mottez F., Zarka P., Chust T., 2008b, Journal of Geophysical Research (Space Physics), 113, A03209
-	Hess S., Mottez F., Zarka P., 2009, Geophys. Res. Let., 36, L14101
-	Hess S. L. G., Delamere P. A., Dols V., Ray L. C., 2011, Journal of Geophysical Research (Space Physics), 116, A01202
-	J\`{a}come H. R. P., Marques M. S., Zarka P., Echer E., Lamy L., Louis C. K., 2022, Astron. & Astrophys., 665, A67
-	Lamy L., Henry F., 2021, https: //doi.org/10.25935/T184-3B87
-	Lamy L., Prang\'{e} R., Henry F., Le Sidaner P., 2015, Astronomy and Computing, 11, 138
-	Lamy L., Zarka P., Cecconi B., Klein L., Masson S., Denis L., Coffre A., Viou C., 2017, in Planetary Radio Emissions VIII, pp 455–466
-	Lamy L., et al., 2021, https://doi.org/10.25935/DV2F-X016
-	Lamy L., et al., 2022a, https://doi.org/10.25935/7zcg-8e29
-	Lamy L., et al., 2022b, Journal of Geophysical Research (Space Physics), 127, e30160
-	Louis C. K., et al., 2017a, Geophys. Res. Let., 44, 9225
-	Louis C. K., Lamy L., Zarka P., Cecconi B., Hess S. L. G., 2017b, Journal of Geophysical Research (Space Physics), 122, 9228
-	Marques M. S., Zarka P., Echer E., Ryabov V. B., Alves M. V., Denis L., Coffre A., 2017, Astron. & Astrophys., 604, A17
-	Mauduit E., Zarka P., Lamy L., 2023, Nature com., p. in revision
-	Zarka P., co authors ., 2020, in Proceedings of the URSI GASS 2020 conference hold in Rome 29/8-5/9/2020, pp 1–4
-	Zarka P., Queinnec J., Crary F. J., 2001, Planet. & Sp. Sci., 49, 1137
-	Zarka P., Marques M. S., Louis C., Ryabov V. B., Lamy L., Echer E., Cecconi B., 2018, Astron. & Astrophys., 618, A84
+    Boischot A., et al., 1980, Icarus, 43, 399
+    Bondonneau L., et al., 2021, Astron. & Asrophys., 652, A34
+    Bonfond B., Saur J., Grodent D., Badman S. V., Bisikalo D., Shematovich V., G\'{e}rardJ. C., Radioti A., 2017, Journal of Geophysical Research (Space Physics), 122, 7985
+    Cecconi B., Coffre A., Loh A., Denis L., Lamy L., 2020, , https://doi.org/10.25935/2EAP-W742
+    Cecconi B., Aicardi S., Lamy L., 2023, Frontiers in Astronomy and Space Sciences (Space Physics), pp 1–7
+    Connerney J. E. P., et al., 2018, Geophys. Res. Let., 45, 2590
+    Connerney J. E. P., Timmins S., Herceg M., Joergensen J. L., 2020, Journal of Geophysical Research (Space Physics), 125, e28138
+    Duchene A., Lamy L., Loh A., Cecconi B., Viou C., Renaud P., 2022, https:// doi.org/10.25935/MPF0-V756
+    Hess S., Zarka P., Mottez F., 2007, Planet. & Sp. Sci., 55, 89
+    Hess S., Cecconi B., Zarka P., 2008a, Geophys. Res. Let., 35, L13107
+    Hess S., Mottez F., Zarka P., Chust T., 2008b, Journal of Geophysical Research (Space Physics), 113, A03209
+    Hess S., Mottez F., Zarka P., 2009, Geophys. Res. Let., 36, L14101
+    Hess S. L. G., Delamere P. A., Dols V., Ray L. C., 2011, Journal of Geophysical Research (Space Physics), 116, A01202
+    J\`{a}come H. R. P., Marques M. S., Zarka P., Echer E., Lamy L., Louis C. K., 2022, Astron. & Astrophys., 665, A67
+    Lamy L., Henry F., 2021, https: //doi.org/10.25935/T184-3B87
+    Lamy L., Prang\'{e} R., Henry F., Le Sidaner P., 2015, Astronomy and Computing, 11, 138
+    Lamy L., Zarka P., Cecconi B., Klein L., Masson S., Denis L., Coffre A., Viou C., 2017, in Planetary Radio Emissions VIII, pp 455–466
+    Lamy L., et al., 2021, https://doi.org/10.25935/DV2F-X016
+    Lamy L., et al., 2022a, https://doi.org/10.25935/7zcg-8e29
+    Lamy L., et al., 2022b, Journal of Geophysical Research (Space Physics), 127, e30160
+    Louis C. K., et al., 2017a, Geophys. Res. Let., 44, 9225
+    Louis C. K., Lamy L., Zarka P., Cecconi B., Hess S. L. G., 2017b, Journal of Geophysical Research (Space Physics), 122, 9228
+    Marques M. S., Zarka P., Echer E., Ryabov V. B., Alves M. V., Denis L., Coffre A., 2017, Astron. & Astrophys., 604, A17
+    Mauduit E., Zarka P., Lamy L., 2023, Nature com., p. in revision
+    Zarka P., co authors ., 2020, in Proceedings of the URSI GASS 2020 conference hold in Rome 29/8-5/9/2020, pp 1–4
+    Zarka P., Queinnec J., Crary F. J., 2001, Planet. & Sp. Sci., 49, 1137
+    Zarka P., Marques M. S., Louis C., Ryabov V. B., Lamy L., Echer E., Cecconi B., 2018, Astron. & Astrophys., 618, A84
  
 
 %R 2023pre9.conf.103102L
@@ -488,7 +488,7 @@ AE (Department of Space Physics, Institute of Atmospheric Physics of the Czech A
 %I DOI: 10.25546/103102
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Saturn, SKR
-%U 1528, 998, 2089, 1426
+%U 2192, 997, 998, 1426, 1119
 %Z Bunce E. J., et al., 2010, Journal of Geophysical Research (Space Physics), 115, A10238
    Cecconi B., Zarka P., 2005, Radio Science, 40, RS3003
    Cecconi B., Lamy L., Zarka P., Prang\'e R., Kurth W. S., Louarn P., 2009,  Journal of Geophysical Research (Space Physics), 114, A03215
@@ -544,7 +544,7 @@ AO (School of Cosmic Physics, DIAS Dunsink Observatory, Dublin Institute for Adv
 %I DOI: 10.25546/103105
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Uranus, Instruments and techniques, Planetary magnetospheres
-%U 1528, 998, 2089, 1751, 1355
+%U 
 %Z Arridge C. S., et al., 2022, Decadal Survey for Solar and Space Physics (Heliophysics) 2024-2033
    Brown L. W., 1976, The Astrophys. J., 207, L209
    Cao X., Paty C., 2017, Journal of Geophysical Research (Space Physics), 122, 6318
@@ -595,7 +595,7 @@ AC (School of Cosmic Physics, DIAS Dunsink Observatory, Dublin Institute for Adv
 %I DOI: 10.25546/103091
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Jupiter, Saturn, Exoplanets, Exoplanetary radio emission, Magnetospheric physics
-%U 1528, 998, 2089, 873, 1426, 484, 498, 1472, 2177
+%U 2192, 998, 997, 873, 1338, 1119, 1426, 994
 %Z Al Saati S., et al., 2022, Journal of Geophysical Research (Space Physics), 127, e2022JA030586
    Badman S. V., Branduardi-Raymont G., Galand M., Hess S. L. G., Krupp N., Lamy L., Melin H., Tao C., 2015, Sp. Sci. Rev., 187, 99
    Baumjohann W., Treumann R. A., 2022, Frontiers in Astronomy and Space Sciences, 9, 1053303
@@ -675,10 +675,10 @@ AE (ONERA-The French Aerospace Lab, 31055 Toulouse, France)
 %D 00/2023
 %T Predictions for Uranus-moons radio emissions and comparison with Voyager 2/PRA observations
 %B Jupiter's and Saturn's moons are known to induce auroral emission in the Ultraviolet wavelengths. At Jupiter, the moons Io, Europa and Ganymede are also responsible for powerful decametric radio emissions, driven by the cyclotron maser instability, sustained by weakly relativistic electrons energized through an Alfv\'{e}nic acceleration process. At Uranus, periodic hectometric radio emissions, observed by the radio instrument Planetary Radio Astronomy experiment of Voyager 2 just after the closest approach of Uranus on 24th Jan. 1986, were tentatively attributed by Kistler (1988) to a similar Alfv\'{e}nic interaction between the moon Ariel and the planet. Taking advantage of recent prediction and modeling efforts devoted to understand the Jupiter-satellite decametric emissions, and in the context of preparing a future Uranus Orbiter, we calculate an estimate of the theoretical power generated as Alfv\'{e}n waves by the electrodynamic interaction between Uranus and its three closest large satellites Miranda, Ariel and Umbriel of 10^5 W. We then present simulations of the expected radio emission induced by these moons, using the Exoplanetary and Planetary Radio Emission Simulator (ExPRES). The simulations are compared to the high resolution measurements of the radio instrument onboard Voyager 2 recently refurbished in a digital format. Our conclusion conrms that the arc-shaped intermittent structure identied by Kistler (1988) is consistent with emissions induced by the Ariel-Uranus interaction, produced through the cyclotron maser instability driven by a loss cone-type electron distribution function and a resonant electron population of 20 keV.
-%I DOI: 10.25546/103106
+%I DOI: 10.25546/103105
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Uranus, Uranian satellites, Magnetosphere interactions with satellites and rings
-%U 1528, 998, 2089, 1751, 1750
+%U 1751, 1750, 998, 2192, 1089, 1260, 997
 %Z Arridge C. S., Paty C., 2021, in Magnetospheres in the Solar System, p. 515
    Bagenal F., 1994, Journal of Geophysics Research, 99, 11043
    Bigg E. K., 1964, Nature, 203, 1008
@@ -757,7 +757,7 @@ AG (Department of Physics and Astronomy, University of Iowa, Iowa City, IA 52242
 %I DOI: 10.25546/103088
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Earth, AKR, Solar wind/magnetosphere interactions
-%U 1528, 998, 2089, 439, 1472
+%U 2192, 998, 1251, 997, 
 %Z Benson R. F., Calvert W., 1979, Geophysical Research Letters, 6, 479
    Benson R. F., Calvert W., Klumpar D. M., 1980, Geophysical Research Letters, 7, 959
    Calvert W., 1981, Geophysical Research Letters, 8, 919
@@ -815,7 +815,7 @@ AD (Department of Astronomy and Carl Sagan Institute, Cornell University, Ithaca
 %I DOI: 10.25546/103092
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Extra-solar planets, Exoplanets, Exoplanetary radio emission, Magnetospheric physics, Instruments and techniques
-%U 484, 498, 998, 1360, 489
+%U 998, 2177, 1119, 498, 997, 1338, 2192
 %Z Ashtari R., Sciola A., Turner J. D., Stevenson K., 2022, The Astrophysical Journal, 939, 24
    Baraffe I., Chabrier G., Barman T., 2008, Astronomy & Astrophysics, 482, 315
    Busse F. H., 1976, Physics of the Earth and Planetary Interiors, 12, 350
@@ -858,7 +858,7 @@ AE (School of Cosmic Physics, DIAS Dunsink Observatory, Dublin Institute for Adv
 %I DOI: 10.25546/103103
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Saturn, Instruments and techniques
-%U 1528, 998, 2089, 1426, 205
+%U 1426, 997, 1191, 2192, 1534
 %Z Boischot A., et al., 1980, Icarus, 43, 399
    Bradley T. J., et al., 2020, Journal of Geophysical Research: Space Physics, 125, e2020JA027907
    Bunce E. J., Cowley S. W. H., Wright D. M., Coates A. J., Dougherty M. K., Krupp N., Kurth W. S., Rymer A. M., 2005, Geophysical Research Letters, 32
@@ -928,7 +928,7 @@ AH (Southwest Research Institute, San Antonio, TX, USA)
 %I DOI: 10.25546/103098
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Jupiter, Juno, Magnetosphere/ionosphere interactions Planetary magnetospheres
-%U 1528, 998, 2089, 873, 2185
+%U 1544, 997, 2089, 873, 1251, 998
 %Z Allegrini F., et al., 2020, Journal of Geophysical Research: Space Physics, 125, e2019JA027693
    Allegrini F., et al., 2021, Journal of Geophysical Research: Space Physics, 126, e2021JA029426
    Chaston C., et al., 2006, Journal of Geophysical Research: Space Physics, 111
@@ -976,7 +976,7 @@ AE (Institute of Atmospheric Physics, Czech Academy of Sciences, Prague, Czechia
 %I DOI: 10.25546/103089
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Saturn,
-%U 1528, 998, 2089, 1426
+%U 2192, 997, 998, 1907
 %Z Benediktov E. A., Getmantsev G. G., Sazonov Y. A., Tarasov A. F., 1965, Kosmicheskie Issledovaniya, 3, 614
    Benson R. F., Mellott M. M., Huff R. L., Gurnett D. A., 1988, Journal of Geophysical Research, 93, 7515
    Block L. P., 1972, 3, 349
@@ -1028,7 +1028,7 @@ AG (Astrophysics department Institute of Radio Astronomy of NASU)
 %I DOI: 10.25546/103685
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Jupiter, Juno, Instruments and techniques
-%U 1528, 998, 2089, 873, 1360
+%U 1360, 1858, 1338, 1355, 1346
 %Z Burke, B.F, Franklin.,  K.L. 1955, J. Geophys Res, Vol. 60, Is. 2, pp. 213–217
    Bigg., E.K, 1964, Nature, 203, pp. 1008–1010
    Bolton, S.J. , Lunine,  J., Stevenson, D., Connerney, J.E.P., Levin, S., Owen, T.C., Bagenal, F., Gautier, D., Ingersoll, A.P., Orton, G.S., Guillot, T., Hubbard, W., Bloxham, J., Coradini, A., Stephens, S.K., Mokashi, P., Thorne, R., Thorpe, R., 2017, Space Sci Rev, Vol. 213, pp. 5–37
@@ -1056,7 +1056,7 @@ AG (Astrophysics department Institute of Radio Astronomy of NASU)
 %I DOI: 10.25546/103686
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Jupiter, Jovian satellites, Io, Juno
-%U 1528, 998, 2089, 873, 872, 627, 2190
+%U 2193, 873, 1191, 116, 1255, 2190
 %Z Bagenal, F., McNutt Jr. R. L., Belcher, J. W., Bridge, H. S., and Sullivan, J. D., 1985, Journal of Geophysical Research: Space Physics, 90(A2), 1755-1757
    Brown, S., et al., 2018, Nature, 558(7708), 87-90
    Connerney, J. E. P., et al., 2017, Space Sci Rev, 213(1), 39-138
@@ -1084,7 +1084,7 @@ AG (Astrophysics department Institute of Radio Astronomy of NASU)
 %I DOI: 10.25546/104051
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Solar radio emission, Stellar radio emission, Instruments and techniques
-%U 1528, 1522, 1621, 1523
+%U 1580, 1522, 1483, 1693, 1584, 1476, 1477, 1338, 230, 1061
 %Z Anantharamaiah K. R., Gothoskar P., Cornwell T. J., 1994, Radio Synthesis Imaging of Anisotropic Angular Broadening in the Solar Wind, Journal of Astrophysics and Astronomy, 15, 387
    Arzner K., Magun A., 1999, Radiowave propagation in a statistically inhomogeneous plasma, A&A, 351, 1165
    Aschwanden M. J., Freeland S. L., 2012, Automated Solar Flare Statistics in Soft X- Rays over 37 Years of GOES Observations: The Invariance of Self-organized Criticality during Three Solar Cycles, ApJ, 754, 112
@@ -1236,7 +1236,7 @@ AG (Astrophysics department Institute of Radio Astronomy of NASU)
 %I DOI: 10.25546/104052
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Solar radio emission, Instruments and techniques
-%U 1528, 1522, 1355, 1345
+%U 2037, 310, 1473, 1491, 1475, 1522, 711, 1997, 1526, 1543
 %Z Bancroft S., 1985, An algebraic solution of the gps equations, IEEE Transactions on Aerospace and Electronic Systems, AES-21, 56
    Bonnin X., Hoang S., Maksimovic M., 2008, The directivity of solar type iii bursts at hectometer and kilometer wavelengths: Wind-ulysses observations, Astronomy and    Astrophysics, 489, 419
    Cane H. V., Stone R. G., Fainberg J., Steinberg J. L., Hoang S., 1982, Type-II Solar Radio Events Observed in the Interplanetary Medium - Part One - General Characteristics,    Solar Physics, 78, 187
@@ -1280,7 +1280,7 @@ AG (Astrophysics department Institute of Radio Astronomy of NASU)
 %I DOI: 10.25546/104049
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Jupiter, Jovian satellites, Magnetosphere interactions with satellites and rings
-%U 1528, 998, 873, 627
+%U 873, 998, 997, 2192, 1191, 1346 
 %Z Barrow C. H., 1981, Latitudinal beaming and local time effects in the decametre-wave radiation from Jupiter observed at the Earth and from Voyager, Astronomy and Astrophysics, 101, 142
    Boudjada M. Y., Leblanc Y., 1992, The variability of Jovian decametric radiation from 1978 to 1988, Advances in Space Research, 12, 95
    Carr T. D., Smith A. G., Donivan F. F., Register H. I., 1970, The twelve-year periodicities of the decametric radiation of Jupiter, Radio Science, 5, 495
@@ -1316,7 +1316,7 @@ AG (Astrophysics department Institute of Radio Astronomy of NASU)
 %I DOI: 10.25546/104048
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Extra-solar planets, Exoplanets, Exoplanetary radio emission, Magnetospheric physics
-%U 498, 998, 2177, 1360
+%U 998, 1610, 1338, 2177, 994, 498, 2192, 1119, 1636
 %Z Alexander R. D., Wynn G. A., Mohammed H., Nichols J. D., Ercolano B., 2016, Magne- tospheres of hot Jupiters: hydrodynamic models and ultraviolet absorption, MNRAS, 456, 2766
    Ashtari R., Sciola A., Turner J. D., Stevenson K., 2022, Detecting Magnetospheric Radio Emission from Giant Exoplanets, ApJ, 939, 24
    Bastian T. S., Dulk G. A., Leblanc Y., 2000, A Search for Radio Emission from Extrasolar Planets, ApJ, 545, 1058
@@ -1413,7 +1413,7 @@ AG (Astrophysics department Institute of Radio Astronomy of NASU)
 %I DOI: 10.25546/104053
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Solar radio emission, Instruments and techniques
-%U 1528, 1522, 1499
+%U 1522, 1993, 827, 1339, 1338, 1342, 1490, 1358
 %Z Boischot A., et al., 1980, A new high-grain, broadband, steerable array to study Jovian decametric emission, Icarus, 43, 399
    Bonnin X., Hoang S., Maksimovic M., 2008, The directivity of solar type III bursts at hectometer and kilometer wavelengths : Wind-Ulysses observations, Astronomy & Astrophysics, 427, 419
    Bonnin X., Hoang S., Cecconi B., Issautier K., 2023, Description of wind/waves/rad1 l3 direction-finding data production, PADC/MASER,
@@ -1468,7 +1468,7 @@ AG (Astrophysics department Institute of Radio Astronomy of NASU)
 %I DOI: 10.25546/104050
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Planetary radio emission, Magnetospheric physics, Jupiter, Jovian satellites, Instruments and techniques
-%U 1528, 998, 205, 873, 627, 2192, 1360
+%U 873, 998, 1338, 872, 2190, 2192, 627, 997, 2188
 %Z Acton C. H., 1996, Ancillary data services of NASA’s Navigation and Ancillary Informa- tion Facility, Planet. Space Sci., 44, 65
    Acton C., Bachman N., Semenov B., Wright E., 2018, A look towards the future in the handling of space science mission geometry, Planetary and Space Science, 150, 9
    Aicardi S., Cecconi B., Lamy L., 2022, [Interactive Resource], Jupiter radio emission probability tool (version 1.0). PADC, doi:10.25935/TV9M-HX48
@@ -1526,7 +1526,7 @@ AG (Astrophysics department Institute of Radio Astronomy of NASU)
 %I DOI: 10.25546/104054
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Solar radio emission, Instruments and techniques
-%U 1528, 1522, 1360, 1523
+%U 1522, 1339, 1475, 1523, 1993, 1476, 1342, 2037, 1988
 %Z Boischot A., 1957, Caracteres d’un type d’emission hertzienne associe a certaines eruptions chromospheriques, Academie des Sciences Paris Comptes Rendus, 244, 1326
    Cane H. V., Sheeley N. R. J., Howard R. A., 1987, Energetic interpanetary shocks, radio emission, and coronal mass ejections, Journal of Geophysical Research, 92, 9869
    Chen X., Kontar E. P., Clarkson D. L., Chrysaphi N., 2023, The frequency ratio and time delay of solar radio emissions with fundamental and harmonic components, Monthly Notices of the Royal Astronomical Society, 520, 3117
@@ -1560,7 +1560,7 @@ AG (Astrophysics department Institute of Radio Astronomy of NASU)
 %I DOI: 10.25546/104055
 %C Copyright @ 2023 This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution and reproduction in other forums is permitted, provided the original author(s) or licensor are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
 %K Astrophysics - Earth and Planetary Astrophysics, Solar System, Solar radio emission, Instruments and techniques
-%U 1528, 1522, 1523, 1360, 205
+%U 1522, 1993, 1339, 1342, 1523, 1355, 1911, 1483, 1933, 1938
 %Z Carley E. P., Reid H., Vilmer N., Gallagher P. T., 2015, Low frequency radio observations of bi-directional electron beams in the solar corona, Astronomy & Astrophysics, 581, A100
    Clarke B. P., Morosan D. E., Gallagher P. T., Dorovskyy V. V., Konovalenko A. A., Carley E. P., 2019, Properties and magnetic origins of solar S-bursts, Astronomy & Astrophysics, 622, A204
    Deng J., Dong W., Socher R., Li L.-J., Li K., Fei-Fei L., 2009, ImageNet: A large-scale hierarchical image database, in 2009 IEEE Conference on Computer Vision and Pattern Recognition, pp 248–255, doi:10.1109/CVPR.2009.5206848
@@ -1652,7 +1652,3 @@ AG (Astrophysics department Institute of Radio Astronomy of NASU)
    Yamasaki D., Inoue S., Bamba Y., Lee J., Wang H., 2022, A data-constrained magne- tohydrodynamic simulation of the X1.0 solar flare of 2021 October 28, Astrophysical Journal, 940, 119
    Yearby K. H., Pickett J. S., 2022, A review of cluster wideband data multi-spacecraft observations of auroral kilometric radiation, Journal of Geophysical Research (Space Physics), 127, e2021JA029499
    Zhao W., Liu S., Zhang S., Zhou Q., Yang C., He Y., Gao Z., Xiao F., 2019, Global Occurrences of Auroral Kilometric Radiation Related to Suprathermal Electrons in Radiation Belts, Geophysical Research Letters, 2, 7230
-
-
-
-
