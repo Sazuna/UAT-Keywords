@@ -7,11 +7,12 @@ import torch
 import pathlib
 import datetime
 import os
-from src.utils.config import BERT_MODEL, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
-from ontology_graph import OntologyGraph
+from src.utils.config import BERT_MODEL, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR, UATS_RDF_V6
+from src.GNN.ontology_graph import OntologyGraph
 from src.utils import corpus_loader
-from model import GNNOntologyClassifier
-from train import (
+from src.utils.util import print_results
+from src.GNN.model import GNNOntologyClassifier
+from src.GNN.train import (
     DocumentOntologyDataset,
     build_multihot,
     train,
@@ -41,8 +42,8 @@ os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8" # increase library footprint i
 # CONFIG
 # ─────────────────────────────────────────────────────────────────────
 
-ONTO_PATH       = "../../corpus/UAT_v6.0.0.rdf" # Input graph
-CORPUS_PATH     = ADS_CORPUS_DIR  # can use ADS_HELIOPHYSICS_CORPUS_DIR for HP-only
+ONTO_PATH       = UATS_RDF_V6 # Input graph
+CORPUS_PATH     = ADS_HELIO_CORPUS_DIR  # can use ADS_HELIOPHYSICS_CORPUS_DIR for HP-only
 DEVICE          = "cuda" if torch.cuda.is_available() else "cpu"
 RUNS            = pathlib.Path("runs")
 CHECKPOINT_PATH = "/scratch2/lfretel/GNN_best_model.pt"
@@ -55,6 +56,7 @@ DROPOUT       = 0.2 #0.3
 EPOCHS        = 10
 BATCH_SIZE    = 32
 LR            = 1e-2
+TOP_K         = 10
 
 # Results:
 # RGCN_HIDDEN => 128, RGCN_OUT => 56, LR => 1e-3: 0.5 after 3 ep
@@ -85,17 +87,17 @@ documents = []
 annotations = []
 
 reader = corpus_loader.Reader()
-for document, annotation in reader.read_corpus(ignore_kailas = False,
-                                               corpus_folder = CORPUS_PATH):
-    documents.append(document)
-    annotations.append(annotation)
+for document in reader.read_corpus(ignore_kailas = False,
+                                   corpus_folder = CORPUS_PATH):
+    documents.append(document.text)
+    annotations.append(document.uats)
 
 # ─────────────────────────────────────────────────────────────────────
 # 3. VECTORIZATION OF DOCUMENTS
 # ─────────────────────────────────────────────────────────────────────
 
 print("\n=== Vectorization of documents ===")
-doc_embeddings = onto.embed_training_corpus(corpus_name = "ADS_corpus",
+doc_embeddings = onto.embed_training_corpus(corpus_name = "ADS_HELIO_corpus",
                                             texts = documents)    # [D, 768]
 print(f"Shape embeddings documents: {doc_embeddings.shape}")
 
@@ -163,26 +165,20 @@ best_f1 = train(
 # 7. INFERENCE
 # ─────────────────────────────────────────────────────────────────────
 
-print("\n=== Inference (exemples) ===")
+print("\n=== Inference (examples) ===")
 
 # Load the best model
 model.load_state_dict(torch.load(CHECKPOINT_PATH, map_location=DEVICE))
 
-new_docs = [
-    "Impact of deforestation on global warming and species extinction.",
-    "Deep learning architectures for text classification tasks.",
-] # TODO load
-
-
-new_docs = []
+new_texts = []
 new_annotations = []
-for text, uats in corpus_loader.Reader().read_pre9forADS():
-    new_docs.append(text)
-    new_annotations.append(uats)
+for doc in corpus_loader.Reader().read_pre9forADS():
+    new_texts.append(doc.text)
+    new_annotations.append(doc.uats)
 
 
 new_emb = onto.embed_training_corpus(corpus_name = "pre9forADS",
-                                     texts = new_docs)
+                                     texts = new_texts)
 
 results = predict(
     model          = model,
@@ -191,14 +187,62 @@ results = predict(
     idx2node       = onto.idx2node,
     node_texts     = onto.node_texts,
     threshold      = 0.05,    # variable (use tau = 0.01 or tau = 0.05 for 2411 labels)
-    top_k          = 5,
+    top_k          = TOP_K,
     device         = DEVICE,
 )
 
-for i, (doc, res) in enumerate(zip(new_docs, results)):
+y_pred = []
+y_true = []
+total = 0
+for i, (doc, annotation, res) in enumerate(zip(new_texts, new_annotations, results)):
     print(f"\nDocument {i+1}: {doc}")
     if res:
+        y_pred_doc = []
         for uri, label, score in res:
             print(f"  → [{score:.3f}] {label}  ({uri})")
+            y_pred_doc.append(uri)
+        print("true =", annotation)
+        y_pred.append(y_pred_doc)
+        y_true.append(annotation)
     else:
         print("  → No node above the threshold")
+    total += 1
+print_results(y_true, y_pred, "preprint", total)
+
+
+
+##### ADS Helio ########
+
+new_texts = []
+new_annotations = []
+for doc in corpus_loader.Reader().read_corpus(False, ADS_HELIO_CORPUS_DIR):
+    new_texts.append(doc.text)
+    new_annotations.append(doc.uats)
+
+new_emb = onto.embed_training_corpus(corpus_name = "ADS_HELIO_CORPUS",
+                                     texts = new_texts)
+
+results = predict(
+    model          = model,
+    doc_embeddings = new_emb,
+    graph          = graph,
+    idx2node       = onto.idx2node,
+    node_texts     = onto.node_texts,
+    threshold      = 0.05,    # variable (use tau = 0.01 or tau = 0.05 for 2411 labels)
+    top_k          = TOP_K,
+    device         = DEVICE,
+)
+y_pred = []
+y_true = []
+total = 0
+for i, (doc, annotation, res) in enumerate(zip(new_texts, new_annotations, results)):
+    if res:
+        y_pred_doc = []
+        for uri, label, score in res:
+            y_pred_doc.append(uri)
+        y_pred.append(y_pred_doc)
+        y_true.append(annotation)
+    else:
+        print("  → No node above the threshold")
+    total += 1
+print_results(y_true, y_pred, "ADS Helio", total)

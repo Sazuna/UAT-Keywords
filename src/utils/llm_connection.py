@@ -5,7 +5,7 @@ import os
 import requests
 import hashlib
 from src.utils.config import configure_ollama, OLLAMA_TEMPERATURE, BERT_MODEL
-import src.utils.config
+from src.utils import config
 
 cache = dict()
 loaded = False

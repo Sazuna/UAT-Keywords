@@ -6,6 +6,7 @@ Load the Turtle ontology and build the PyTorch Geometric graph.
 import torch
 import re
 import pickle
+import numpy as np
 from rdflib import Graph, URIRef
 from rdflib.namespace import SKOS, RDF
 from torch_geometric.data import Data
@@ -76,7 +77,6 @@ class OntologyGraph:
 
         # Add a global node (whole graph) with edges between the global node and all nodes
         global_node = "global"
-        nodes_set.add(global_node)
         # Fallback: add nodes that are concepts and self-attention edges
         for s, _, _ in rdf.triples((None, RDF.type, SKOS.Concept)):
             s_str = str(s)
@@ -87,6 +87,7 @@ class OntologyGraph:
 
         # 2. Node indexation
         sorted_nodes = sorted(nodes_set, key = lambda x: int(x.split('/')[-1]))
+        sorted_nodes.append(global_node)
         self.node2idx = {n: i for i, n in enumerate(sorted_nodes)}
         self.idx2node = {i: n for n, i in self.node2idx.items()}
 
@@ -107,6 +108,7 @@ class OntologyGraph:
         print(BERT_UATS_EMBEDDINGS_FILE)
         if BERT_UATS_EMBEDDINGS_FILE.exists():
             with open(BERT_UATS_EMBEDDINGS_FILE, "rb") as file:
+                
                 node_features = pickle.load(file)
                 if "global2node" in self.EDGE_TYPES or "node2global" in self.EDGE_TYPES:
                     # Add a global embedding (mean of all embeddings) for the global node

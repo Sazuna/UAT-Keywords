@@ -6,7 +6,7 @@ import pathlib
 from rdflib import Graph, SKOS, OWL, DCTERMS, Literal, XSD
 from collections import defaultdict
 from src.utils.llm_connection import generate
-from src.utils.config import CORPUS_DIR, UATS_JSON
+from src.utils.config import CORPUS_DIR, UATS_JSON, UATS_JSON_VERBALIZED
 import json
 
 
@@ -18,7 +18,8 @@ def augment_definition(definition: str, key: str):
     return generate(prompt, cache_key = key)
 
 
-def main(uat_file: pathlib.Path):
+def main(uat_file: pathlib.Path,
+         verbalization: bool = False):
     g = Graph()
     g.parse(uat_file)
     description_by_uat = defaultdict(lambda: defaultdict(list))
@@ -59,13 +60,16 @@ def main(uat_file: pathlib.Path):
         if not SKOS.prefLabel in values:
             del description_by_uat[uat]
             continue
-        #if not SKOS.definition in values:
-        #    definition = augment_definition(str(values[SKOS.prefLabel][0]), key = str(uat))
-        #    values[SKOS.definition] = [definition]
+        if verbalization and not SKOS.definition in values:
+            definition = augment_definition(str(values[SKOS.prefLabel][0]), key = str(uat))
+            values[SKOS.definition] = [definition]
 
-
-    with open(UATS_JSON, "w") as file:
-        json.dump(description_by_uat, file, indent = 2)
+    if verbalization:
+        with open(UATS_JSON_VERBALIZED, "w") as file:
+            json.dump(description_by_uat, file, indent = 2)
+    else:
+        with open(UATS_JSON, "w") as file:
+            json.dump(description_by_uat, file, indent = 2)
 
 
 if __name__ == "__main__":

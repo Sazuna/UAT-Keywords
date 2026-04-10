@@ -12,7 +12,7 @@ import ontology_graph
 exit()
 
 # ── Config ────────────────────────────────────────────────────────────────────
-CHECKPOINT_PATH = "./kailas-finetuned/checkpoint-21270"  # ← à adapter
+CHECKPOINT_PATH = "./kailas-finetuned/checkpoint-21270"
 TOKENIZER_NAME  = "adsabs/KAILAS"
 THRESHOLD       = 0.62
 
@@ -28,7 +28,7 @@ model.eval()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
-print(f"Modèle chargé depuis : {CHECKPOINT_PATH}")
+print(f"Model loaded from : {CHECKPOINT_PATH}")
 print(f"Device : {device}\n")
 
 # ── Dataset ───────────────────────────────────────────────────────────────────
@@ -60,9 +60,9 @@ validation_dataset = validation_dataset.map(tokenize, batched=True)
 validation_dataset.set_format("torch")
 print(f"{len(validation_dataset)} documents chargés\n")
 
-# ── Inférence ─────────────────────────────────────────────────────────────────
+# ── Inference ─────────────────────────────────────────────────────────────────
 print(f"{'='*60}")
-print(f"Test sur {len(validation_dataset)} documents (threshold={THRESHOLD})")
+print(f"Test on {len(validation_dataset)} documents (threshold={THRESHOLD})")
 print(f"{'='*60}\n")
 
 all_probs = []
@@ -84,10 +84,10 @@ for i, sample in enumerate(validation_dataset):
     true_nodes = [idx2node[idx] for idx in true_idxs]
 
     print(f"── Document {i} {'─'*40}")
-    print(f"  Texte    : {validation_docs[i][:120]}...")
-    print(f"  probs    : max={probs.max():.4f}  mean={probs.mean():.4f}")
-    print(f"  Prédits  : {pred_nodes if pred_nodes else '(aucun)'}")
-    print(f"  Attendus : {true_nodes}")
+    print(f"  Text      : {validation_docs[i][:120]}...")
+    print(f"  probs     : max={probs.max():.4f}  mean={probs.mean():.4f}")
+    print(f"  Pred      : {pred_nodes if pred_nodes else '(aucun)'}")
+    print(f"  True      : {true_nodes}")
     print()
 
 # ── Diagnostic global ─────────────────────────────────────────────────────────

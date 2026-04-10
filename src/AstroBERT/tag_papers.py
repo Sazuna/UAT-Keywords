@@ -10,31 +10,51 @@ from collections import defaultdict, Counter
 from typing import Iterable
 import regex
 import matplotlib.pyplot as plt
-from encoder import astrobert_encode
 import spacy
+from src.utils.config import BERT_UATS_EMBEDDINGS_FILE, UATS_LABELS_JSON, ADS_HELIO_CORPUS_DIR, UATS_JSON, UATS_JSON_VERBALIZED, CORPUS_DIR
+from src.corpus import uat_to_corpus
+from src.utils.corpus_loader import Reader
+from src.utils.util import print_results
+from src.AstroBERT.encoder import astrobert_encode
+from src.AstroBERT import embed_keywords
+
 nlp = spacy.load("en_core_web_trf")
 
-from src.utils.config import BERT_UATS_EMBEDDINGS_FILE, UATS_LABELS_JSON
-
+TOP_K = 10
 
 from sentence_transformers import SentenceTransformer
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
-
-TEST = False
+VERBALIZATION = True
+print("Use VERBALIZATION of UATs:", VERBALIZATION)
 PLOT = False
 p = print
-def print(*string, force = False):
-    if TEST or force:
-        p(string)
+
+#with open(UATS_JSON, "r") as file:
+#    uats_json = json.load(file)
+
+if VERBALIZATION:
+    if not UATS_JSON_VERBALIZED.exists():
+        uat_to_corpus.main(CORPUS_DIR / "UAT_v6.0.0.rdf", verbalization=True)
+    with open(UATS_JSON_VERBALIZED, "r") as file:
+        uats_json = json.load(file)
+else:
+    if not UATS_JSON.exists():
+        uat_to_corpus.main(CORPUS_DIR / "UAT_v6.0.0.rdf", verbalization=False)
+    with open(UATS_JSON, "r") as file:
+        uats_json = json.load(file)
 
 
 # Embeddings
-with open(BERT_UATS_EMBEDDINGS_FILE, "rb") as file:
-    uat_embeddings = np.load(file, allow_pickle = True)
-    # Normalize for better performance
-    uat_embeddings = uat_embeddings / np.linalg.norm(uat_embeddings, axis=1, keepdims=True)
+if not BERT_UATS_EMBEDDINGS_FILE.exists() or True:
+    uat_embeddings = embed_keywords.main()
 
+else:
+    with open(BERT_UATS_EMBEDDINGS_FILE, "rb") as file:
+        uat_embeddings = np.load(file, allow_pickle = True)
+
+# Normalize for better performance
+uat_embeddings = uat_embeddings / np.linalg.norm(uat_embeddings, axis=1, keepdims=True)
 
 # UATs informations
 with open(UATS_LABELS_JSON, "r") as file:
@@ -64,12 +84,12 @@ class UatUtils():
         """
         labels = []
         for rank, top_id in enumerate(top_idx):
-            print(f"Top {rank + 1}: ", top_id, force = False)
+            print(f"Top {rank + 1}: ", top_id
             uat_info = UatUtils.get_uat(top_id)
             print("UAT info:", uat_info)
             uat_uri = uat_info[0]
             uat_label = uat_info[1]
-            print(uat_uri, uat_label, force = False)
+            print(uat_uri, uat_label)
             labels.append(uat_label)
         return labels
 
@@ -104,81 +124,7 @@ class UatUtils():
             for broader in broaders:
                 yield from UatUtils.get_uat_categories(broader)
 
-
 # Embeddings slices
-
-
-
-class Reader():
-    def read_pre9forADS(self) -> Iterable[tuple[str, str, str, str, str, str]]:
-        with open("../corpus/pre9forADS_all.dat", "r") as file:
-            lines = file.readlines()
-            all_docs = dict()
-            doc = None
-            state = None
-            prefix = ""
-            doi = None
-            for line in lines:
-                if line.startswith("%R"): # reference
-                    # all_docs.append(doc)
-                    if doi:
-                        all_docs[doi] = doc
-                    doc = defaultdict(str)
-                    state = "reference"
-                    prefix = "%R"
-                elif line.startswith("%T"):
-                    state = "title"
-                    prefix = "%T"
-                elif line.startswith("%B"):
-                    state = "abstract"
-                    prefix = "%B"
-                elif line.startswith("%A"):
-                    state = "authors"
-                    prefix = "%A"
-                elif line.startswith("%F"):
-                    state = "affiliation"
-                    prefix = "%F"
-                elif line.startswith("%I"):
-                    state = "DOI"
-                    prefix = "%I"
-                elif line.startswith("%K"):
-                    state = "Keywords"
-                    prefix = "%K"
-                elif line.startswith("%C"):
-                    state = "copyright"
-                    prefix = "%C"
-                elif line.startswith("%D"):
-                    state = "date"
-                    prefix = "%D"
-                elif line.startswith("%J"):
-                    state = "journal"
-                    prefix = "%J"
-                elif line.startswith("%R"):
-                    state = "r..."
-                    prefix = "%R"
-                elif line.startswith("%Z"):
-                    state = "z..."
-                    prefix = "%Z"
-
-                if not state:
-                    continue
-                elif state == "DOI":
-                    doi = line.removeprefix(prefix).strip()
-                else:
-                    doc[state] += line.removeprefix(prefix).strip() + ' '
-
-            for doi, doc in all_docs.items():
-                keywords = doc.get("keywords", "").strip()
-                title = doc.get("title", "").strip()
-                abstract = doc.get("abstract", "").strip()
-                journal = doc.get("journal", "") # Useful for categories filtering
-                doc_str = title.strip() + '. ' + doc.get("abstract", "")  + '. ' + keywords + '. ' + journal.split("edited")[0]
-                doc_str = regex.sub(r'\.+', '.', doc_str)
-                yield doi, title, abstract, keywords, journal, doc_str
-
-
-    def __iter__(self):
-        return self.read_pre9forADS()
 
 
 class DocumentProcesser():
@@ -186,17 +132,19 @@ class DocumentProcesser():
     Saves a document
     """
     def __init__(self,
-                 doi: str,
-                 title: str,
-                 abstract: str,
-                 papers_keywords: str,
-                 journal: str,
+                 #doi: str,
+                 #title: str,
+                 #abstract: str,
+                 #papers_keywords: str,
+                 #journal: str,
                  doc_str: str):
+        """
         self._doi = doi
         self._title = title
         self._abstract = abstract
         self._papers_keywords = papers_keywords
         self._journal = journal
+        """
         self._doc_str = doc_str
 
 
@@ -227,18 +175,20 @@ class DocumentProcesser():
 
 
     def __iter__(self):
-        #for x in self.sentencize():
-        #    yield x
-        yield self._doc_str
+        for x in self.sentencize():
+            yield x
 
 
-    def process(self):
+    def process_multi(self,
+                      use_noun_chunk: bool = False):
         top_k = 10
         all_labels_by_sentences = []
-        noun_chunks = self.get_noun_chunks()
-        noun_chunks_str = ' '.join(noun_chunks)
-        query_embs = astrobert_encode([noun_chunks_str])
-        # query_embs = astrobert_encode([txt for txt in self]) # model.encode(txt)
+        if use_noun_chunk:
+            noun_chunks = self.get_noun_chunks()
+            noun_chunks_str = ' '.join(noun_chunks)
+            query_embs = astrobert_encode(noun_chunks_str)
+        else:
+            query_embs = astrobert_encode([txt for txt in self]) # model.encode(txt)
         query_embs = query_embs / np.linalg.norm(query_embs, axis=1, keepdims=True)
         keywords_score_by_batch = defaultdict(float)
         for query_emb in query_embs:
@@ -249,10 +199,11 @@ class DocumentProcesser():
             for idx, score in zip(top_idx, scores):
                 keywords_score_by_batch[idx] += score
             # Find clusters on different levels
-            self.graph_clusters(top_idx)
+            # self.graph_clusters(top_idx)
+            """
             keywords = UatUtils.get_and_print_top_k_keywords(top_idx)
             affixes_counts = self.get_affixes_counts(keywords = keywords)
-            # print(affixes_counts, force = True)
+            # print(affixes_counts)
             uris, labels, broaders, narrowers, relateds = UatUtils.get_top_infos(top_idx)
             # 1-level relations between entities
             counts, counts_sum = self.count_relations(top_idx,
@@ -260,15 +211,39 @@ class DocumentProcesser():
                                                       narrowers,
                                                       [], # relateds
                                                       )
-        print(self._doi, self._title, self._doc_str, self._papers_keywords, force = True)
+            """
         bests_idx = sorted(keywords_score_by_batch.items(), key = lambda x: x[1], reverse = True)
+        """
         for idx, score in bests_idx:
             for uat_category in UatUtils.get_uat_categories(idx):
                 category_label = UatUtils.get_uat_label(uat_category)
-                print(uat_category, category_label, force = True)
+        """
         bests_keywords = [UatUtils.get_uat_label(idx) for idx, _ in bests_idx]
-        print(bests_keywords, force = True)
+        # print(bests_keywords)
+        return bests_keywords
 
+
+    def process_sentences(self):
+        query_embs = astrobert_encode([txt for txt in self]) # model.encode(txt)
+        query_embs = query_embs / np.linalg.norm(query_embs, axis=1, keepdims=True)
+        best_keywords = []
+        for query_emb in query_embs:
+            scores = uat_embeddings @ query_emb
+            scores = np.asarray(scores).reshape(-1)
+            top_idx = self.get_top_idx(top_k = 1, scores = scores)#.tolist()
+            best_keywords.append(UatUtils.get_uat_label(top_idx[0]))
+        return list(set(best_keywords))
+
+
+    def process(self):
+        query_embs = astrobert_encode([self._doc_str]) # model.encode(txt)
+        query_embs = query_embs / np.linalg.norm(query_embs, axis=1, keepdims=True)
+        for query_emb in query_embs:
+            scores = uat_embeddings @ query_emb
+            scores = np.asarray(query_emb).reshape(-1)
+            top_idx = self.get_top_idx(top_k = TOP_K, scores = scores)#.tolist()
+            bests_keywords = [UatUtils.get_uat_label(idx) for idx in top_idx]
+            return bests_keywords
 
 
     ### Functions to clusterize ###
@@ -437,31 +412,38 @@ class DocumentProcesser():
 
 
 
-def main():
 
-    for doi, title, abstract, papers_keywords, journal, doc_str in Reader():
-        doc = DocumentProcesser(doi, title, abstract, papers_keywords, journal, doc_str)
-        doc.process()
+def main(sentencize: bool = False):
+
+    reader = Reader()
+
+    y_true = []
+    y_pred = []
+    for document in reader.read_pre9forADS():
+        doc = DocumentProcesser(document.text)
+        if sentencize:
+            best_keywords = doc.process_sentences()
+        else:
+            best_keywords = doc.process()
+        y_true.append(document.uats_labels)
+        y_pred.append(best_keywords)
+        print("Doc uats:", document.uats_labels)
+        print("Best keywords", best_keywords)
+    print_results(y_true, y_pred, "preprint", len(y_true))
+
+    y_true = []
+    y_pred = []
+    for document in reader.read_corpus(ignore_kailas=False,
+                                       corpus_folder=ADS_HELIO_CORPUS_DIR):
+        doc = DocumentProcesser(document.text)
+        if sentencize:
+            best_keywords = doc.process_sentences()
+        else:
+            best_keywords = doc.process()
+        y_true.append(document.uats_labels)
+        y_pred.append(best_keywords)
         continue
-        print("----------------------------------------------")
-        print(doi, doc_str)
-        query_emb = model.encode(doc_str)
-        query_emb = query_emb / np.linalg.norm(query_emb)
-        scores = uat_embeddings @ query_emb
-        get_top_k(30, scores, uat_labels)
-        plot_top_k_curve(30, scores)
-
-        for sentence in sentencize(doc_str):
-            query_emb = model.encode(sentence)
-            query_emb = query_emb / np.linalg.norm(query_emb)
-            scores_sentence = uat_embeddings @ query_emb
-
-        """
-        best_id = np.argmax(scores)
-        best_score = scores[best_id]
-        print(best_id, best_score)
-        print("UAT LABEL:", uat_labels[str(int(best_id))])
-        """
+    print_results(y_true, y_pred, "ADS_Heliophysics", len(y_true))
 
 if __name__ == "__main__":
-    main()
+    main(sentencize = True)

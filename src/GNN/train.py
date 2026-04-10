@@ -14,7 +14,7 @@ import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score
 from torch.utils.tensorboard import SummaryWriter
 
-from model import GNNOntologyClassifier
+from src.GNN.model import GNNOntologyClassifier
 
 # tau (threshold for selection of candidate labels)
 THRESHOLD = 0.1

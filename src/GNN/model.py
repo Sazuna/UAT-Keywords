@@ -99,18 +99,21 @@ class DocumentNodeScorer(nn.Module):
             nn.Linear(hidden_dim, node_out_dim),
         )
 
-    def forward(self, doc_emb: torch.Tensor, node_emb: torch.Tensor) -> torch.Tensor:
+    def forward(self, doc_emb: torch.Tensor, node_emb: torch.Tensor, exclude_last : bool) -> torch.Tensor:
         """
         Args:
             doc_emb  : [B, doc_in_dim]     embeddings des documents du batch
             node_emb : [N, node_out_dim]   embeddings des nœuds (figés pendant le forward)
+            exclude_last : bool            exclude last node (global node) from scoring
 
         Returns:
-            logits : [B, N]  un score par nœud par document (avant sigmoid)
+            logits: [B, N] or [B, N-1]     one score by node by document (before sigmoid)
         """
         d = self.doc_proj(doc_emb)           # [B, node_out_dim]
         d = F.normalize(d, dim=-1)
-        n = F.normalize(node_emb, dim=-1)    # [N, node_out_dim]
+         # Exclude global node from predictions
+        n = node_emb if not exclude_last else node_emb[:-1]
+        n = F.normalize(n, dim=-1)    # [N, node_out_dim]
         logits = d @ n.T                     # [B, N]
 
         return logits
@@ -155,7 +158,8 @@ class GNNOntologyClassifier(nn.Module):
         node_features: torch.Tensor,
         edge_index: torch.Tensor,
         edge_type: torch.Tensor,
+        exclude_global_node: bool = True,
     ) -> torch.Tensor:
         node_emb = self.rgcn(node_features, edge_index, edge_type)   # [N, rgcn_out]
-        logits = self.scorer(doc_emb, node_emb)                       # [B, N]
+        logits = self.scorer(doc_emb, node_emb,  exclude_last=exclude_global_node) # [B, N-1]
         return logits

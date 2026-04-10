@@ -1,13 +1,18 @@
 import json
 import os
-from src.utils.config import TEST_CORPUS_FILE, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR
+from src.utils.config import TEST_CORPUS_FILE, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR, UATS_JSON
 from tqdm import tqdm
 from typing import Iterable
 from pathlib import Path
 from collections import defaultdict
+from datasets import Dataset
+from rdflib import SKOS
 
 from datasets import load_dataset
 dataset = load_dataset("adsabs/SciX_UAT_Keywords")
+
+with open(UATS_JSON, "r") as file:
+    uat_data = json.load(file)
 
 
 def get_kailas_training_bibcodes():
@@ -37,6 +42,10 @@ class Reader():
                     if not type(uat) == str or not uat.startswith(uat_namespace):
                         uats[i] = f"{uat_namespace}{uat}"
             self.uats = uats
+            uats_labels = [uat_data.get(uat, {SKOS.prefLabel: ["[DEPRECATED]"]}).get(str(SKOS.prefLabel), ["[NO_LABEL]"])[0] for uat in uats]
+            if "[NO_LABEL]" in uats_labels:
+                uats_labels.remove("[NO_LABEL]")
+            self.uats_labels = uats_labels
 
 
         @property
@@ -48,6 +57,15 @@ class Reader():
 
         def sentencize(self):
             return [t.strip() for t in self.text.split('.') if t.strip()]
+
+
+        def sentencize_with_overlap(self) -> list[tuple[str]]:
+            """
+            Cut by sentences two by two to extract sub-categories.
+            FIXME the first and last sentences are under represented
+            """
+            sentences = self.sentencize()
+            return zip(sentences[:-1], sentences[1:])
 
 
     def read_pre9forADS(self) -> Iterable[Document]:
@@ -117,6 +135,8 @@ class Reader():
                     doi = line.removeprefix(prefix).strip()
                 elif state:
                     doc[state] += line.removeprefix(prefix).strip() + ' '
+            if not doi in all_docs and doc:
+                all_docs[doi] = doc
 
             for doi, doc in all_docs.items():
                 keywords = doc.get("keywords", "").strip()
@@ -131,7 +151,7 @@ class Reader():
 
     def read_corpus(self,
                     ignore_kailas: bool = False,
-                    corpus_folder: Path = ADS_HELIO_CORPUS_DIR) -> Iterable[tuple]:
+                    corpus_folder: Path = ADS_HELIO_CORPUS_DIR) -> Iterable[Document]:
         """
         Load corpus collected on ADS. Yield tuples (doc_str, list_of_uats).
 
@@ -151,7 +171,17 @@ class Reader():
                 continue
             total += 1
             document = Reader.Document(bibcode, title, None, abstract, keywords, None)
-            yield document.text, document.uats
+            yield document
         print(f"Total of documents in the corpus: {total}")
         if ignore_kailas:
             print(f"Ignored documents that are in KAILAS training set: {ignored}")
+
+
+    def get_hf_corpus(self,
+                      corpus_path: str = "Sazuna/UAT_keywords",
+                      split: str = "train") -> Dataset:
+        """
+        Quicker than read_corpus.
+        """
+        dataset = load_dataset(corpus_path, split=split)
+        return dataset

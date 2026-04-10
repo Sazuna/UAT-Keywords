@@ -3,7 +3,7 @@ Find UATs by naive textual match
 """
 from typing import Set
 from rdflib import SKOS
-from src.utils.config import UATS_JSON, CORPUS_DIR
+from src.utils.config import UATS_JSON, CORPUS_DIR, ADS_HELIO_CORPUS_DIR
 from src.corpus import uat_to_corpus
 import json
 import regex
@@ -71,12 +71,32 @@ def main():
     Try to execute label_match on our test corpus
     """
     from src.utils import corpus_loader
+    from src.utils.util import print_results
     reader = corpus_loader.Reader()
+    y_pred = []
+    y_true = []
+    total = 0
     for document in reader.read_pre9forADS():
         predicted = label_match(document.text)
         print("text:", document.text)
         print("pred:", predicted)
         print("true:", document.uats)
+        y_pred.append(predicted)
+        y_true.append(document.uats)
+        total += 1
+    print_results(y_true, y_pred, "preprint", total)
+    y_pred = []
+    y_true = []
+    total = 0
+    for document in reader.read_corpus(False, ADS_HELIO_CORPUS_DIR):
+        predicted = label_match(document.text)
+        print("text:", document.text)
+        print("pred:", predicted)
+        print("true:", document.uats)
+        y_pred.append(predicted)
+        y_true.append(document.uats)
+        total += 1
+    print_results(y_true, y_pred, "ADS HELIO", total)
 
 if __name__ == "__main__":
     main()
