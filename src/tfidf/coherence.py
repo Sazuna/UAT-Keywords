@@ -36,6 +36,7 @@ class Coherence():
 
         # Plot the nodes distribution
 
+        """
         plt.style.use('_mpl-gallery')
         # make data:
         x = 1 + np.arange(len(self.node_count))
@@ -46,8 +47,8 @@ class Coherence():
 
         ax.bar(x, y, width=1, edgecolor="blue", linewidth=0.7)
 
-        ax.set(xlim=(0, 2411), xticks=np.arange(1, 2411),
-               ylim=(0, 4000), yticks=np.arange(1, 4000))
+        #ax.set(xlim=(0, 2411), xticks=np.arange(1, 2411),
+        #       ylim=(0, 4000), yticks=np.arange(1, 4000))
 
 
         y_max = max(y)
@@ -62,8 +63,47 @@ class Coherence():
         ax.grid(True, alpha=0.3, linestyle='--')
         
         plt.tight_layout()
-        plt.savefig("nodes_distrib.jpg", dpi=150)
+        plt.savefig("nodes_distrib.jpg")
+        """
 
+        # Plot the nodes distribution
+        plt.style.use('_mpl-gallery')
+        # make data:
+        x = 1 + np.arange(len(self.node_count))
+        y = sorted(self.node_count.values(), reverse=True)
+    
+        fig, ax = plt.subplots(figsize=(12, 6))
+    
+        # Barres plus fines
+        ax.bar(x, y, width=0.8, edgecolor="blue", linewidth=0.5, color='steelblue')
+        
+        # Configuration de l'axe Y
+        y_max = max(y)
+        y_ticks = np.arange(0, y_max + 500, 500)
+        ax.set_yticks(y_ticks)
+        ax.set_yticklabels(y_ticks)
+        
+        # Configuration de l'axe X - seulement quelques valeurs espacées
+        x_max = len(self.node_count)
+        x_ticks = np.arange(0, x_max + 500, 500)
+        ax.set_xticks(x_ticks)
+        ax.set_xticklabels(x_ticks)
+        
+        # Limites des axes
+        ax.set_xlim(0, x_max + 10)
+        ax.set_ylim(0, y_max * 1.05)
+        
+        # Labels et titre
+        ax.set_xlabel('Node Index (ranked by frequency)', fontsize=12)
+        ax.set_ylabel('Frequency', fontsize=12)
+        ax.set_title('Distribution of Node Frequencies', fontsize=14)
+        
+        # Grille
+        ax.grid(True, alpha=0.3, linestyle='--')
+        
+        plt.tight_layout()
+        plt.savefig("nodes_distrib.jpg", dpi=150)
+        
 
     def npmi(self, x, y, eps=1e-12) -> float:
         """
