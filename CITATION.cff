@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Fretel"
+  given-names: "Liza"
+  orcid: "https://orcid.org/0009-0001-4600-9954"
+- family-names: "Louis"
+  given-names: "Corentin"
+  orcid: "https://orcid.org/0000-0002-9552-8822"
+- family-names: "Cecconi"
+  given-names: "Baptiste"
+  orcid: "https://orcid.org/0000-0001-7915-5571"
+title: "UAT Keywords"
+version: 1.0.0
+doi: 10.5281/zenodo.19456377
+date-released: 2026-04-17
+url: "https://github.com/Sazuna/UAT-Keywords"
