@@ -235,7 +235,7 @@ class OntologyGraph:
         # Version that updates labels recursively
         # Y^{(t+1)} = \alpha Y^{(t)} + (1-\alpha) Y^{(t)}A
         # sums = labels_multihot.sum(dim=1)
-        # print(sums)
+
         for _ in range(steps):
             propagated = labels_multihot @ adj_norm
             labels_multihot = alpha * labels_multihot + (1 - alpha) * propagated

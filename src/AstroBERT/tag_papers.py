@@ -11,7 +11,7 @@ from typing import Iterable
 import regex
 import matplotlib.pyplot as plt
 import spacy
-from src.utils.config import BERT_UATS_EMBEDDINGS_FILE, UATS_LABELS_JSON, ADS_HELIO_CORPUS_DIR, UATS_JSON, UATS_JSON_VERBALIZED, CORPUS_DIR
+from src.utils.config import BERT_UATS_EMBEDDINGS_FILE, BERT_UATS_EMBEDDINGS_FILE_VERBALIZED, UATS_LABELS_JSON, ADS_HELIO_CORPUS_DIR, UATS_JSON, UATS_JSON_VERBALIZED, CORPUS_DIR
 from src.corpus import uat_to_corpus
 from src.utils.corpus_loader import Reader
 from src.utils.util import print_results
@@ -20,18 +20,15 @@ from src.AstroBERT import embed_keywords
 
 nlp = spacy.load("en_core_web_trf")
 
-TOP_K = 10
-
 from sentence_transformers import SentenceTransformer
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
+TOP_K = 10
+NORMALIZE = False
 VERBALIZATION = True
+SENTENCIZE = True
 print("Use VERBALIZATION of UATs:", VERBALIZATION)
 PLOT = False
-p = print
-
-#with open(UATS_JSON, "r") as file:
-#    uats_json = json.load(file)
 
 if VERBALIZATION:
     if not UATS_JSON_VERBALIZED.exists():
@@ -46,20 +43,33 @@ else:
 
 
 # Embeddings
-if not BERT_UATS_EMBEDDINGS_FILE.exists() or True:
-    uat_embeddings = embed_keywords.main()
+if VERBALIZATION:
+    if not BERT_UATS_EMBEDDINGS_FILE_VERBALIZED.exists():
+        uat_embeddings = embed_keywords.main(verbalization = True)
+    else:
+        with open(BERT_UATS_EMBEDDINGS_FILE_VERBALIZED, "rb") as file:
+            uat_embeddings = np.load(file, allow_pickle=True)
 
 else:
-    with open(BERT_UATS_EMBEDDINGS_FILE, "rb") as file:
-        uat_embeddings = np.load(file, allow_pickle = True)
+    if not BERT_UATS_EMBEDDINGS_FILE.exists():
+        uat_embeddings = embed_keywords.main(verbalization = False)
+
+    else:
+        with open(BERT_UATS_EMBEDDINGS_FILE, "rb") as file:
+            uat_embeddings = np.load(file, allow_pickle = True)
 
 # Normalize for better performance
-uat_embeddings = uat_embeddings / np.linalg.norm(uat_embeddings, axis=1, keepdims=True)
+if NORMALIZE:
+    uat_embeddings = uat_embeddings / np.linalg.norm(uat_embeddings, axis=1, keepdims=True)
+
+
 
 # UATs informations
 with open(UATS_LABELS_JSON, "r") as file:
     uat_labels = json.load(file)
 
+with open(UATS_JSON, "r") as file:
+    uat_json = json.load(file)
 
 class UatUtils():
     def get_uat(idx: int):
@@ -84,7 +94,7 @@ class UatUtils():
         """
         labels = []
         for rank, top_id in enumerate(top_idx):
-            print(f"Top {rank + 1}: ", top_id
+            print(f"Top {rank + 1}: ", top_id)
             uat_info = UatUtils.get_uat(top_id)
             print("UAT info:", uat_info)
             uat_uri = uat_info[0]
@@ -127,7 +137,7 @@ class UatUtils():
 # Embeddings slices
 
 
-class DocumentProcesser():
+class DocumentProcessor():
     """
     Saves a document
     """
@@ -189,7 +199,8 @@ class DocumentProcesser():
             query_embs = astrobert_encode(noun_chunks_str)
         else:
             query_embs = astrobert_encode([txt for txt in self]) # model.encode(txt)
-        query_embs = query_embs / np.linalg.norm(query_embs, axis=1, keepdims=True)
+        if NORMALIZE:
+            query_embs = query_embs / np.linalg.norm(query_embs, axis=1, keepdims=True)
         keywords_score_by_batch = defaultdict(float)
         for query_emb in query_embs:
             scores = uat_embeddings @ query_emb
@@ -225,25 +236,27 @@ class DocumentProcesser():
 
     def process_sentences(self):
         query_embs = astrobert_encode([txt for txt in self]) # model.encode(txt)
-        query_embs = query_embs / np.linalg.norm(query_embs, axis=1, keepdims=True)
+        if NORMALIZE:
+            query_embs = query_embs / np.linalg.norm(query_embs, axis=1, keepdims=True)
         best_keywords = []
         for query_emb in query_embs:
             scores = uat_embeddings @ query_emb
             scores = np.asarray(scores).reshape(-1)
             top_idx = self.get_top_idx(top_k = 1, scores = scores)#.tolist()
             best_keywords.append(UatUtils.get_uat_label(top_idx[0]))
-        return list(set(best_keywords))
+        return list(set(best_keywords)), scores[top_idx]
 
 
     def process(self):
         query_embs = astrobert_encode([self._doc_str]) # model.encode(txt)
-        query_embs = query_embs / np.linalg.norm(query_embs, axis=1, keepdims=True)
+        if NORMALIZE:
+            query_embs = query_embs / np.linalg.norm(query_embs, axis=1, keepdims=True)
         for query_emb in query_embs:
             scores = uat_embeddings @ query_emb
             scores = np.asarray(query_emb).reshape(-1)
             top_idx = self.get_top_idx(top_k = TOP_K, scores = scores)#.tolist()
             bests_keywords = [UatUtils.get_uat_label(idx) for idx in top_idx]
-            return bests_keywords
+            return bests_keywords, scores[top_idx]
 
 
     ### Functions to clusterize ###
@@ -301,7 +314,6 @@ class DocumentProcesser():
         add_links(broaders)
         add_links(narrowers)
         add_links(relateds)
-        print(df)
         return df, df.sum(axis = 0)
 
 
@@ -314,7 +326,6 @@ class DocumentProcesser():
         for idx in top_idx:
             # Find path to root
             uat_info = UatUtils.get_uat(idx)
-            print(uat_info)
             label = uat_info[1] # uat_labels[str(idx)][1]
             path = [(int(idx), label)]
             broaders = uat_info[2] # broader
@@ -323,10 +334,9 @@ class DocumentProcesser():
                 label = uat_labels[str(broader)][1]
                 path.append((broader, label))
                 broaders = uat_labels[str(broader)][2]
-            print(path)
             paths.append(path)
         counts = Counter([p for path in paths for p in path ])
-        print(counts)
+        return counts
 
 
     ### view functions ###
@@ -420,30 +430,37 @@ def main(sentencize: bool = False):
     y_true = []
     y_pred = []
     for document in reader.read_pre9forADS():
-        doc = DocumentProcesser(document.text)
+        doc = DocumentProcessor(document.text)
         if sentencize:
-            best_keywords = doc.process_sentences()
+            best_keywords, scores = doc.process_sentences()
         else:
-            best_keywords = doc.process()
+            best_keywords, scores = doc.process()
         y_true.append(document.uats_labels)
         y_pred.append(best_keywords)
         print("Doc uats:", document.uats_labels)
-        print("Best keywords", best_keywords)
+        if not sentencize:
+            i = 0
+            for keyword, score in zip(best_keywords, scores):
+                i += 1
+                print(f"top {i}", keyword, score)
+            print("Best keywords", best_keywords)
+        else:
+            print("Predicted uats:", best_keywords)
     print_results(y_true, y_pred, "preprint", len(y_true))
 
     y_true = []
     y_pred = []
     for document in reader.read_corpus(ignore_kailas=False,
                                        corpus_folder=ADS_HELIO_CORPUS_DIR):
-        doc = DocumentProcesser(document.text)
+        doc = DocumentProcessor(document.text)
         if sentencize:
-            best_keywords = doc.process_sentences()
+            best_keywords, scores = doc.process_sentences()
         else:
-            best_keywords = doc.process()
+            best_keywords, scores = doc.process()
         y_true.append(document.uats_labels)
         y_pred.append(best_keywords)
         continue
     print_results(y_true, y_pred, "ADS_Heliophysics", len(y_true))
 
 if __name__ == "__main__":
-    main(sentencize = True)
+    main(sentencize = SENTENCIZE)

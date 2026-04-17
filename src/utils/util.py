@@ -1,6 +1,57 @@
-
+import json
 from sklearn.metrics import precision_score, recall_score, f1_score
 from sklearn.preprocessing import MultiLabelBinarizer
+from rdflib import URIRef, SKOS
+from src.utils.config import UATS_LABELS_JSON, UATS_JSON
+
+# UATs informations
+#with open(UATS_LABELS_JSON, "r") as file:
+#    uat_labels = json.load(file)
+
+with open(UATS_JSON, "r") as file:
+    uat_json = json.load(file)
+
+def get_uat_broaders(uri: URIRef) -> list[URIRef]:
+    """
+    Return None if the URI is not in the uat_json,
+    else return a list of broaders (empty if uri was the top concept)
+    """
+    data = uat_json.get(uri, None)
+    if data is None:
+        return None
+    return data.get(str(SKOS.broader), [])
+    
+def get_depth(uri: str, depth: int = 0) -> int:
+    """
+    Get the minimal depth of the UAT in the hierarchy.
+
+    Args:
+        uri: an UAT's uri (str representation of the URIRef)
+    """
+    broaders = get_uat_broaders(uri)
+    if broaders is None:
+        return -1 # Deprecated
+    if not broaders:
+        return depth
+    all_broaders_depths = []
+    for broader in broaders:
+        all_broaders_depths.append(get_depth(broader, depth + 1))
+    return min(all_broaders_depths)
+
+
+"""
+def get_uat(idx: int):
+    idx = str(int(idx))
+    return uat_labels[idx]
+
+
+def get_uat_label(idx: int):
+    return get_uat(idx)[1]
+
+
+def get_uat_broaders(idx: int):
+    return get_uat(idx)[2]
+"""
 
 
 def print_results(y_true, y_pred, corpus_name, total: int):

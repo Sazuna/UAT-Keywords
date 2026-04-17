@@ -42,8 +42,8 @@ BERT_MODEL = "adsabs/astroBERT" # "UniverseTBD/astrollama"
 ENCODER_MAX_LENGTH = 512
 
 # File for saving the UAT's embeddings
-BERT_UATS_EMBEDDINGS_FILE = CACHE_DIR / f"embeddings_{BERT_MODEL.replace('/', '-')}.pkl"
-BERT_UATS_EMBEDDINGS_FILE_VERBALIZED = CACHE_DIR / f"embeddings_{BERT_MODEL.replace('/', '-')}_verbalized.pkl"
+BERT_UATS_EMBEDDINGS_FILE = CACHE_DIR / f"embeddings_{BERT_MODEL.replace('/', '-')}"
+BERT_UATS_EMBEDDINGS_FILE_VERBALIZED = CACHE_DIR / f"embeddings_{BERT_MODEL.replace('/', '-')}_verbalized"
 # File for saving the UAT's embeddings of documents
 BERT_DOCS_EMBEDDINGS_FILE = CACHE_DIR / f"embeddings_{BERT_MODEL.replace('/', '-')}_documents.pkl"
 

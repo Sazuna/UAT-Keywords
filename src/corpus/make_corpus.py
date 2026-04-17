@@ -14,7 +14,7 @@ from urllib.parse import urlencode
 from rdflib import Graph, SKOS, RDF
 from huggingface_hub import HfApi
 from datasets import Dataset, DatasetInfo
-from src.utils.config import CORPUS_DIR, UATS_JSON, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR, DATA_DIR
+from src.utils.config import CORPUS_DIR, UATS_JSON, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR, DATA_DIR, UATS_RDF_V6
 from src.label_match.label_match import label_match
 from src.corpus import uat_to_corpus
 
@@ -66,7 +66,7 @@ for uat_uri, uat_data in uat_labels.items():
             uats_by_alt_labels[alt_label[:-1]] = uat_idx
 
 
-base_ads_query = lambda x: "keyword:\"{}\"".format("\",\"".join(x))
+base_ads_query = lambda x, y: "keyword:\"{}\" bibstem:\"{}\"".format("\",\"".join(x), y)
 
 def get_uats_under(uat_uri: str):
     """
@@ -102,7 +102,6 @@ def make_query(uat_idx, uat_label, rows: int = 1000):
     """
     Use uat_label to prevent getting things like NGC 659
     """
-    print([str(uat_idx), uat_label])
     query = {"q": base_ads_query([str(uat_idx), uat_label]),
              "fl": "title, bibcode, abstract, keyword",
              "rows": rows}
@@ -147,41 +146,43 @@ def get_results(uat_idx, uat_label, corpus_dir):
                        indent = 2)
 
 
-def make_query_keyword(uat_label, rows: int = 1000):
+def make_query_keyword(uat_label, bibstem, rows: int = 1000):
     """
     Make a query that is only based on the UAT label.
     """
-    query = {"q": base_ads_query([uat_label]),
+    query = {"q": base_ads_query([uat_label], bibstem),
              "fl": "title, bibcode, abstract, keyword",
              "rows": rows}
     return urlencode(query)
 
-
 def get_results_keyword(uat_label,
                         corpus_dir,
+                        bibstems,
                         save_on_disk: bool = False,
                         upload_to_hf: bool = False,
                         bibcodes_history: List[str] = [],
                         get_only_verified_uat: bool = False):
 
-    if get_only_verified_uat:
-        query = make_query(uat_idx,
-                           uat_label)
-    else:
-        query = make_query_keyword(uat_label)
-    response = requests.get("https://api.adsabs.harvard.edu/v1/search/query?{}".format(query), \
-                        headers={'Authorization': 'Bearer ' + ADS_API_TOKEN})
-    try:
-        response = response.json()["response"]
-    except requests.exceptions.JSONDecodeError:
-        print(response)
-        print("https://api.adsabs.harvard.edu/v1/search/query?{}".format(make_query_keyword(uat_label)))
-        exit()
-    numFound = response["numFound"]
-    numFoundExact = response["numFoundExact"]
-    if not numFoundExact:
-        raise ValueError("numFoundExact not found:", uat_label, numFound)
-    docs = response["docs"]
+    docs = []
+    for bibstem in bibstems:
+        if get_only_verified_uat:
+            query = make_query(uat_idx,
+                               uat_label)
+        else:
+            query = make_query_keyword(uat_label, bibstem)
+        response = requests.get("https://api.adsabs.harvard.edu/v1/search/query?{}".format(query), \
+                            headers={'Authorization': 'Bearer ' + ADS_API_TOKEN})
+        try:
+            response = response.json()["response"]
+        except requests.exceptions.JSONDecodeError:
+            print(response)
+            print("https://api.adsabs.harvard.edu/v1/search/query?{}".format(make_query_keyword(uat_label, bibstem)))
+            exit()
+        numFound = response["numFound"]
+        numFoundExact = response["numFoundExact"]
+        if not numFoundExact:
+            raise ValueError("numFoundExact not found:", uat_label, numFound)
+        docs.extend(response["docs"])
 
     # HF corpus
     bibcodes   = []
@@ -202,7 +203,7 @@ def get_results_keyword(uat_label,
         if filename.exists():
             continue
         title = doc.get("title", [None])[0]
-        keywords = doc["keyword"]
+        keywords = doc.get("keyword", "")
         abstract = doc.get("abstract", "")
         if not abstract or not title or not bibcode or not keywords:
             continue
@@ -302,6 +303,7 @@ def upload_to_huggingface(
         for i, ann_list in enumerate(annotations):
             if len(ann_list) == 0:
                 print("No annotation for document.")
+                raise ValueError # TODO understand why this occurs
             for uri in ann_list:
                 if uri in node2idx:
                     multihot[i, node2idx[uri]] = 1.0
@@ -309,7 +311,7 @@ def upload_to_huggingface(
                 else:
                     print(f"[Warning] Unknown URI in node2idx : {uri}")
         return multihot
-    node2idx, idx2node = load_nodes("../corpus/UAT_v6.0.0.rdf")
+    node2idx, idx2node = load_nodes(UATS_RDF_V6)
     multihot = build_multihot(annotations=uats_uri,
                               node2idx=node2idx)
     all_uats_uri = uats_uri + uats_uri_extended
@@ -359,11 +361,12 @@ uats_done = []
 
 def main(categories: str = HP_CATEGORIES,
          corpus_dir: str = ADS_HELIO_CORPUS_DIR,
+         bibstems: list[str] = ["AAS", "AJ", "ApJ", "PASP", "pds", "PhDT", "PSJ", "RNAAS", "SSRv"],
          upload_to_hf: bool = False,
          save_on_disk: bool = True,
          get_only_verified_uat: bool = False,
          hf_dataset: str = "UAT_keywords",
-         from_cache: bool = True):
+         from_cache: bool = False):
     """
     Args:
         get_only_verified_uat: if True, it will look for papers with both the label and the index of UAT in their keywords.
@@ -388,7 +391,7 @@ def main(categories: str = HP_CATEGORIES,
                 return data["uats_done"], data["all_bibcodes"], data["all_texts"], data["all_uat_uris"], data["all_uat_labels"], data["all_uat_uri_extended"], data["all_uat_labels_extended"]
         return [], [], [], [], [], [], []
 
-    def download(categories, corpus_dir, upload_to_hf, save_on_disk, from_cache: bool = True):
+    def download(categories, corpus_dir, bibstems, upload_to_hf, save_on_disk, from_cache: bool = True):
         corpus_dir.mkdir(parents=True, exist_ok=True)
         global uats_done, all_bibcodes, all_texts, all_uat_uris, all_uat_labels, all_uat_uris_extended, all_uat_labels_extended
 
@@ -400,7 +403,6 @@ def main(categories: str = HP_CATEGORIES,
             uats = sorted(set(uats))
             for uat in uats:
                 if uat in uats_done:
-                    print("ignoring UAT:", uat)
                     continue
                 uat_label = get_uat_label(uat)
                 if uat_label:
@@ -411,6 +413,7 @@ def main(categories: str = HP_CATEGORIES,
                     res = get_results_keyword(
                         uat_label,
                         corpus_dir,
+                        bibstems=bibstems,
                         save_on_disk=save_on_disk,
                         upload_to_hf=upload_to_hf,
                         bibcodes_history=all_bibcodes,
@@ -428,6 +431,7 @@ def main(categories: str = HP_CATEGORIES,
                     res = get_results_keyword(
                         uat_alt_label,
                         corpus_dir,
+                        bibstems,
                         save_on_disk=save_on_disk,
                         upload_to_hf=upload_to_hf,
                         bibcodes_history = all_bibcodes,
@@ -446,15 +450,16 @@ def main(categories: str = HP_CATEGORIES,
                 bibcodes=all_bibcodes,
                 texts=all_texts,
                 uats_uri=all_uat_uris,
-                uat_labels=all_uat_labels,
-                uat_uris_extended=all_uat_uris_extended,
-                uat_labels_extended=all_uat_labels_extended,
+                uats_label=all_uat_labels,
+                uats_uri_extended=all_uat_uris_extended,
+                uats_label_extended=all_uat_labels_extended,
                 hf_dataset=hf_dataset)
             
     # download(HP_CATEGORIES, ADS_HELIO_CORPUS_DIR)
     # download(ALL_CATEGORIES, ADS_CORPUS_DIR)
     download(categories, #HP_CATEGORIES,
              corpus_dir, #ADS_HELIO_CORPUS_DIR,
+             bibstems,
              upload_to_hf=upload_to_hf,
              save_on_disk=save_on_disk,
              from_cache=from_cache)
@@ -463,6 +468,7 @@ def main(categories: str = HP_CATEGORIES,
 if __name__ == "__main__":
     main(categories=ALL_CATEGORIES,
          corpus_dir=ADS_CORPUS_DIR,
+         bibstems = ["AAS", "AJ", "ApJ", "PASP", "pds", "PhDT", "PSJ", "RNAAS", "SSRv"],
          upload_to_hf=True,
          save_on_disk=False,
          hf_dataset="UAT_keywords_large",

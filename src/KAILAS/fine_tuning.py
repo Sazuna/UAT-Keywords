@@ -3,17 +3,29 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trai
 from datasets import Dataset
 import torch
 import numpy as np
-import src.utils.corpus_loader
-import src.utils.config
+from src.utils import corpus_loader
+from src.utils import config
 import ontology_graph
 
 # Load model and tokenizer
-MODEL_NAME = "adsabs/KAILAS"
-REVISION = "v3" # @param {type:"string"}
-CORPUS_PATH = config.ADS_CORPUS_DIR
-NUM_LABELS = 2372 #2411
-THRESHOLD = 0.5
-NUM_EPOCHS = 1
+MODEL_NAME      = "adsabs/KAILAS"
+REVISION        = "v3" # @param {type:"string"}
+CORPUS_PATH     = config.ADS_CORPUS_DIR
+NUM_LABELS      = 2411 # 2372 #2411
+THRESHOLD       = 0.5
+TOP_K: int      = 10 # TODO use this
+NUM_EPOCHS: int = 2
+LR: float       = 1e-4
+WD: float       = 1e-5
+print("Experiment parameters:")
+print(f"MODEL_NAME={MODEL_NAME}")
+print(f"REVISION={REVISION}")
+print(f"CORPUS_PATH={CORPUS_PATH}")
+print(f"NUM_LABELS={NUM_LABELS}")
+print(f"TOP_K={TOP_K}")
+print(f"NUM_EPOCHS={NUM_EPOCHS}")
+print(f"LEARNING RATE={LR}")
+print(f"WEIGHT DECAY={WD}")
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME,
                                           max_length = 512,
@@ -25,17 +37,17 @@ def tokenize(batch):
     tokens["labels"] = build_multihot(batch["labels"]).tolist()
     return tokens
 
-onto = ontology_graph.OntologyGraph(config.CORPUS_DIR / "UAT_v5.1.0.rdf")
-node2idx = onto.node2idx # TODO use those instead of KAILAS' label2id & id2label
+onto = ontology_graph.OntologyGraph(config.UATS_RDF_V6) # UATS_RDF_V5 for KAILAS compatibility
+node2idx = onto.node2idx
 idx2node = onto.idx2node
 UAT_NAMESPACE = "http://astrothesaurus.org/uat/"
 
 #kailas_config = AutoConfig.from_pretrained(MODEL_NAME)
 #label2id = kailas_config.label2id
 #id2label = kailas_config.id2label
-# node2idx aligné sur KAILAS : URI → index
+# node2idx
 node2idx = {f"{UAT_NAMESPACE}{uat_id}": idx for idx, uat_id in idx2node.items()}
-idx2node  = {idx: f"{UAT_NAMESPACE}{uat_id}" for idx, uat_id in node2idx.items()}
+idx2node  = {idx: f"{UAT_NAMESPACE}{uat_id}" for idx, uat_id in idx2node.items()}
 
 def build_multihot(
     annotations: List[List[str]],
@@ -56,15 +68,14 @@ def build_multihot(
 
 
 def compute_pos_weight(train_labels: List[List[str]], node2idx: dict, num_labels: int) -> torch.Tensor:
-    """Compute pos_weight = (nb négatifs) / (nb positifs) pour chaque label."""
+    """Compute pos_weight = (N neg) / (N pos) for each label."""
     counts = torch.zeros(num_labels)
     n_docs = len(train_labels)
     for ann_list in train_labels:
         for uri in ann_list:
             if uri in node2idx:
                 counts[node2idx[uri]] += 1.0
-    # Évite la division par zéro pour les labels jamais vus
-    counts = torch.clamp(counts, min=1.0)
+    counts = torch.clamp(counts, min=1.0, max=1000.0)
     pos_weight = (n_docs - counts) / counts
     return pos_weight
 
@@ -133,8 +144,8 @@ training_args = TrainingArguments(
     output_dir="./kailas-finetuned",
     num_train_epochs=NUM_EPOCHS,
     per_device_train_batch_size=8,
-    learning_rate=2e-4,
-    weight_decay=0.01,
+    learning_rate=LR,
+    weight_decay=1e-5,
     save_strategy="epoch",
     logging_strategy="steps",
     logging_steps=50,
@@ -184,8 +195,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.eval()
 model.to(device)
 
-all_probs = []  # pour diagnostiquer la distribution des scores
-
+all_probs = []  # to analyze scores distribution
+y_true = []
+y_pred = []
 for i, sample in enumerate(validation_dataset):
     input_ids      = sample["input_ids"].unsqueeze(0).to(device)
     attention_mask = sample["attention_mask"].unsqueeze(0).to(device)
@@ -193,6 +205,17 @@ for i, sample in enumerate(validation_dataset):
     with torch.no_grad():
         logits = model(input_ids=input_ids, attention_mask=attention_mask).logits
 
+    topk = torch.topk(logits, k=TOP_K, dim=0)
+    topk_indices = topk.indices.cpu().numpy()
+    topk_scores = topk.values.cpu().numpy()
+    pred_nodes = [idx2node[idx] for idx in topk_indices]
+
+    true_idxs  = np.where(sample["labels"].numpy() == 1.0)[0]
+    true_nodes = [idx2node[idx] for idx in true_idxs]
+    y_pred.append(pred_nodes)
+    y_true.append(true_nodes)
+    """
+    # With THRESHOLD instead of top_k
     probs     = torch.sigmoid(logits).squeeze(0).cpu().numpy()
     all_probs.append(probs)
 
@@ -208,6 +231,8 @@ for i, sample in enumerate(validation_dataset):
     print(f"  Preds   : {pred_nodes}")
     print(f"  True   : {true_nodes}")
     print()
+    """
+
 
 # Diagnostic global : distribution des probs sur tout le dataset
 all_probs = np.concatenate(all_probs)

@@ -203,7 +203,6 @@ print(f"\tTRAIN SIZE = {n_samples}")
 print(f"\tTEST SIZE  = {X_val.shape[0]}")
 print(Y_train.min(), Y_train.max())
 print(Y_val.min(), Y_val.max())
-print("Pos weight:", pos_weight.min().item(), pos_weight.max().item())
 print("Training linear regression model...")
 best_loss = 1000000
 
@@ -214,8 +213,6 @@ for epoch in tqdm(range(EPOCHS)):
     for i in range(0, n_samples, batch_size):
         X_train_batch = X_train[i:i+batch_size]
         Y_train_batch = Y_train[i:i+batch_size]
-        print("type X_train_batch:", type(X_train_batch))
-        print("device:", X_train_batch.device)
 
         #X_train_batch = torch.tensor(X_train_batch, dtype=DTYPE).to(device)
         #Y_train_batch = torch.tensor(Y_train_batch, dtype=DTYPE).to(device)
