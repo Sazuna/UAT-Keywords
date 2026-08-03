@@ -1,6 +1,11 @@
 import json
 import os
-from src.utils.config import TEST_CORPUS_FILE, ADS_HELIO_CORPUS_DIR, ADS_CORPUS_DIR, UATS_JSON
+import bibtexparser
+from src.utils.config import (TEST_CORPUS_FILE,
+    ADS_HELIO_CORPUS_DIR,
+    ADS_CORPUS_DIR,
+    UATS_JSON,
+    BIBTEX_PATH)
 from tqdm import tqdm
 from typing import Iterable
 from pathlib import Path
@@ -185,3 +190,29 @@ class Reader():
         """
         dataset = load_dataset(corpus_path, split=split)
         return dataset
+
+
+    def read_bibtex(self,
+                    path: Path = BIBTEX_PATH) -> Iterable[Document]:
+        """
+        Read a bibtex (.bib) document and yields
+        documents.
+        """
+        with open(path, "r") as file:
+            # text = file.read()
+            # print(text)
+            library = bibtexparser.load(file)
+        for paper in library.entries:
+            bibcode = paper.get("bibcode", paper.get("doi", paper.get("ID", "")))
+            title = paper.get("title", "")
+            journal = paper.get("booktitle", "")
+            abstract = paper.get("abstract", "")
+            keywords = paper.get("keywords", [])
+            uats = paper.get("uat", [])
+            document = Reader.Document(bibcode,
+                                       title,
+                                       journal,
+                                       abstract,
+                                       keywords,
+                                       uats)
+            yield document
