@@ -115,3 +115,5 @@ def configure_ollama():
     print(f"Connected to {CONNECTION_MODE}. Using model {OLLAMA_MODEL}")
 
 OLLAMA_TEMPERATURE = 0 # Higher temperature = less determinist
+
+BIBTEX_PATH = ROOT / "corpus" / "prex_citations.bib"

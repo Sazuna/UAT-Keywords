@@ -180,6 +180,8 @@ class Reader():
         print(f"Total of documents in the corpus: {total}")
         if ignore_kailas:
             print(f"Ignored documents that are in KAILAS training set: {ignored}")
+        if total == 0:
+            raise FileNotFoundError(f"{corpus_folder} is empty.")
 
 
     def get_hf_corpus(self,
