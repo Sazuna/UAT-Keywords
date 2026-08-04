@@ -7,7 +7,7 @@ import json
 import os
 from tqdm import tqdm
 from src.utils.config import ADS_CORPUS_DIR, ADS_HELIO_CORPUS_DIR, TEST_CORPUS_FILE
-from src.KAILAS import uat_utils
+from src.utils import uat_utils
 from src.utils.corpus_loader import Reader
 from src.utils.util import print_results
 from sklearn.metrics import precision_score, recall_score, f1_score
@@ -21,7 +21,7 @@ MODEL    = "adsabs/KAILAS"
 tokenizer = AutoTokenizer.from_pretrained(MODEL)
 
 classifier = pipeline("text-classification", model = MODEL, tokenizer = tokenizer)#, return_all_scores = True)
-zero_shot_classifier = pipeline("zero-shot-classification", model = "adsabs/KAILAS", tokenizer = tokenizer)
+# zero_shot_classifier = pipeline("zero-shot-classification", model = "adsabs/KAILAS", tokenizer = tokenizer)
 
 from datasets import load_dataset
 dataset = load_dataset("adsabs/SciX_UAT_Keywords")
