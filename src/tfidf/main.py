@@ -31,9 +31,13 @@ LR: float         = 1e-4 # learning rate
 WD: float         = 1e-5 # weight decay
 batch_size: int   = 64
 DTYPE             = torch.float32
+VERBOSE: bool     = True
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--max_features")
+
+if not  VERBOSE:
+    print = lambda x: 0
 
 print("Experiment hyperparameters:")
 print(f"\tMAX_FEATURES = {MAX_FEATURES}")
@@ -88,8 +92,7 @@ if not FROM_HF:
         texts.append(text)
         uats.append(uat)
 
-
-    coherence = Coherence(uats) # TODO only use uats in the train dataset to build coherence.
+    coherence = Coherence(uats) # TODO only use uats in the train dataset to build coherence
 
     ### Generate multihot
     def build_multihot(
@@ -290,130 +293,143 @@ for epoch in tqdm(range(EPOCHS)):
 print("Done")
 
 
+def classify(text: str,
+             TOP_K: int) -> list[str]:
+    x = pipeline.transform(text)
+    x_tensor = torch.tensor(x, device = device)
+    logits = model(x)
+    probs = torch.sigmoid(logits)
+    preds = (probs > 0.1).int()
+    top_k = torch.topk(probs, k=TOP_K, dim = 1)
+    predicted_uats = [idx2node[int(uat)] for uat in idx]
+    return predicted_uats
+
 # 5. Inference
 
-### Eval on preprint corpus ###
-text_test = []
-uats_test = []
-bibcodes  = []
-for document in reader.read_pre9forADS():
-    text_test.append(document.text)
-    uats_test.append(document.uats)
-    bibcodes.append(document.bibcode)
+if __name__ == "__main__":
+    ### Eval on preprint corpus ###
+    text_test = []
+    uats_test = []
+    bibcodes  = []
+    for document in reader.read_pre9forADS():
+        text_test.append(document.text)
+        uats_test.append(document.uats)
+        bibcodes.append(document.bibcode)
 
-X_test = pipeline.transform(text_test)
-X_test_tensor = torch.tensor(X_test, device=device)
+    X_test = pipeline.transform(text_test)
+    X_test_tensor = torch.tensor(X_test, device=device)
 
-Y_test = build_multihot(uats_test, node2idx=node2idx)
-Y_test_tensor = torch.tensor(Y_test, device=device)
-
-
-logits = model(X_test_tensor)
-probs = torch.sigmoid(logits)
-preds = (probs > 0.1).int()
-top_k = torch.topk(probs, k=TOP_K, dim=1)
-for idx, scores, bibcode, text, uats in zip(
-    top_k.indices,
-    top_k.values,
-    bibcodes,
-    text_test,
-    uats_test
-):
-    predicted_uats = [idx2node[int(uat)] for uat in idx]
-    uats_labels = [node2label.get(uat, "UNKNOWN") for uat in uats]
-    predicted_uats_labels = [node2label.get(uat, "UNKNOWN") for uat in predicted_uats]
-    print("Bibcode:", bibcode, "Text:", text)
-    print("paper UATs:", '\n\t'.join([f"{uat} ({label})" for uat, label in zip(uats, uats_labels)]))
-    print("predicted UATs:")
-    for i, (score, uat, label) in enumerate(zip(scores, predicted_uats, predicted_uats_labels), start=1):
-        print(f"\tTop {i} | {score:.4f}: {uat} ({label})")
-    print(f"Mean npmi of top {TOP_K} labels:", coherence.mean_npmi(uats))
-    print("")
+    Y_test = build_multihot(uats_test, node2idx=node2idx)
+    Y_test_tensor = torch.tensor(Y_test, device=device)
 
 
-y_pred = torch.zeros_like(probs, dtype=torch.int)
-y_pred.scatter_(1, top_k.indices, 1)
-y_pred = y_pred.detach().cpu().numpy()
-y_true = Y_test_tensor.detach().cpu().numpy()
-
-precision = precision_score(y_true, y_pred, average="macro", zero_division=0)
-recall = recall_score(y_true, y_pred, average="macro", zero_division=0)
-f1 = f1_score(y_true, y_pred, average="macro", zero_division=0)
-
-print(f"Precision (macro): {precision:.4f}")
-print(f"Recall    (macro): {recall:.4f}")
-print(f"F1-score  (macro): {f1:.4f}")
-
-precision = precision_score(y_true, y_pred, average="micro", zero_division=0)
-recall = recall_score(y_true, y_pred, average="micro", zero_division=0)
-f1 = f1_score(y_true, y_pred, average="micro", zero_division=0)
-
-print(f"Precision (micro): {precision:.4f}")
-print(f"Recall    (micro): {recall:.4f}")
-print(f"F1-score  (micro): {f1:.4f}")
-
-
-
-### Eval on HP corpus ###
-text_test = []
-uats_test = []
-bibcodes  = []
-for document in reader.read_corpus(ignore_kailas=False,
-                                   corpus_folder=ADS_HELIO_CORPUS_DIR):
-    text_test.append(document.text)
-    uats_test.append(document.uats)
-    bibcodes.append(document.bibcode)
-
-X_test = pipeline.transform(text_test)
-X_test_tensor = torch.tensor(X_test, device=device)
-
-Y_test = build_multihot(uats_test, node2idx=node2idx)
-Y_test_tensor = torch.tensor(Y_test, device=device)
+    logits = model(X_test_tensor)
+    probs = torch.sigmoid(logits)
+    preds = (probs > 0.1).int()
+    top_k = torch.topk(probs, k=TOP_K, dim=1)
+    for idx, scores, bibcode, text, uats in zip(
+        top_k.indices,
+        top_k.values,
+        bibcodes,
+        text_test,
+        uats_test
+    ):
+        predicted_uats = [idx2node[int(uat)] for uat in idx]
+        uats_labels = [node2label.get(uat, "UNKNOWN") for uat in uats]
+        predicted_uats_labels = [node2label.get(uat, "UNKNOWN") for uat in predicted_uats]
+        print("Bibcode:", bibcode, "Text:", text)
+        print("paper UATs:", '\n\t'.join([f"{uat} ({label})" for uat, label in zip(uats, uats_labels)]))
+        print("predicted UATs:")
+        for i, (score, uat, label) in enumerate(zip(scores, predicted_uats, predicted_uats_labels), start=1):
+            print(f"\tTop {i} | {score:.4f}: {uat} ({label})")
+        if coherence:
+            print(f"Mean npmi of top {TOP_K} labels:", coherence.mean_npmi(uats))
+        print("")
 
 
-logits = model(X_test_tensor)
-probs = torch.sigmoid(logits)
-preds = (probs > 0.1).int()
-top_k = torch.topk(probs, k=TOP_K, dim=1)
+    y_pred = torch.zeros_like(probs, dtype=torch.int)
+    y_pred.scatter_(1, top_k.indices, 1)
+    y_pred = y_pred.detach().cpu().numpy()
+    y_true = Y_test_tensor.detach().cpu().numpy()
 
-"""
-for idx, scores, bibcode, text, uats in zip(
-    top_k.indices,
-    top_k.values,
-    bibcodes,
-    text_test,
-    uats_test
-):
-    predicted_uats = [idx2node[int(uat)] for uat in idx]
-    uats_labels = [node2label.get(uat, "UNKNOWN") for uat in uats]
-    predicted_uats_labels = [node2label.get(uat, "UNKNOWN") for uat in predicted_uats]
-    print("Bibcode:", bibcode, "Text:", text)
-    print("paper UATs:", '\n\t'.join([f"{uat} ({label})" for uat, label in zip(uats, uats_labels)]))
-    print("predicted UATs:")
-    for i, (score, uat, label) in enumerate(zip(scores, predicted_uats, predicted_uats_labels), start=1):
-        print(f"\tTop {i} | {score:.4f}: {uat} ({label})")
-    print(f"Mean npmi of top {TOP_K} labels:", coherence.mean_npmi(uats))
-    print("")
-"""
+    precision = precision_score(y_true, y_pred, average="macro", zero_division=0)
+    recall = recall_score(y_true, y_pred, average="macro", zero_division=0)
+    f1 = f1_score(y_true, y_pred, average="macro", zero_division=0)
+
+    print(f"Precision (macro): {precision:.4f}")
+    print(f"Recall    (macro): {recall:.4f}")
+    print(f"F1-score  (macro): {f1:.4f}")
+
+    precision = precision_score(y_true, y_pred, average="micro", zero_division=0)
+    recall = recall_score(y_true, y_pred, average="micro", zero_division=0)
+    f1 = f1_score(y_true, y_pred, average="micro", zero_division=0)
+
+    print(f"Precision (micro): {precision:.4f}")
+    print(f"Recall    (micro): {recall:.4f}")
+    print(f"F1-score  (micro): {f1:.4f}")
 
 
-y_pred = torch.zeros_like(probs, dtype=torch.int)
-y_pred.scatter_(1, top_k.indices, 1)
-y_pred = y_pred.detach().cpu().numpy()
-y_true = Y_test_tensor.detach().cpu().numpy()
 
-precision = precision_score(y_true, y_pred, average="macro", zero_division=0)
-recall = recall_score(y_true, y_pred, average="macro", zero_division=0)
-f1 = f1_score(y_true, y_pred, average="macro", zero_division=0)
+    ### Eval on HP corpus ###
+    text_test = []
+    uats_test = []
+    bibcodes  = []
+    for document in reader.read_corpus(ignore_kailas=False,
+                                       corpus_folder=ADS_HELIO_CORPUS_DIR):
+        text_test.append(document.text)
+        uats_test.append(document.uats)
+        bibcodes.append(document.bibcode)
 
-print(f"Precision (macro): {precision:.4f}")
-print(f"Recall    (macro): {recall:.4f}")
-print(f"F1-score  (macro): {f1:.4f}")
+    X_test = pipeline.transform(text_test)
+    X_test_tensor = torch.tensor(X_test, device=device)
 
-precision = precision_score(y_true, y_pred, average="micro", zero_division=0)
-recall = recall_score(y_true, y_pred, average="micro", zero_division=0)
-f1 = f1_score(y_true, y_pred, average="micro", zero_division=0)
+    Y_test = build_multihot(uats_test, node2idx=node2idx)
+    Y_test_tensor = torch.tensor(Y_test, device=device)
 
-print(f"Precision (micro): {precision:.4f}")
-print(f"Recall    (micro): {recall:.4f}")
-print(f"F1-score  (micro): {f1:.4f}")
+
+    logits = model(X_test_tensor)
+    probs = torch.sigmoid(logits)
+    preds = (probs > 0.1).int()
+    top_k = torch.topk(probs, k=TOP_K, dim=1)
+
+    """
+    for idx, scores, bibcode, text, uats in zip(
+        top_k.indices,
+        top_k.values,
+        bibcodes,
+        text_test,
+        uats_test
+    ):
+        predicted_uats = [idx2node[int(uat)] for uat in idx]
+        uats_labels = [node2label.get(uat, "UNKNOWN") for uat in uats]
+        predicted_uats_labels = [node2label.get(uat, "UNKNOWN") for uat in predicted_uats]
+        print("Bibcode:", bibcode, "Text:", text)
+        print("paper UATs:", '\n\t'.join([f"{uat} ({label})" for uat, label in zip(uats, uats_labels)]))
+        print("predicted UATs:")
+        for i, (score, uat, label) in enumerate(zip(scores, predicted_uats, predicted_uats_labels), start=1):
+            print(f"\tTop {i} | {score:.4f}: {uat} ({label})")
+        print(f"Mean npmi of top {TOP_K} labels:", coherence.mean_npmi(uats))
+        print("")
+    """
+
+
+    y_pred = torch.zeros_like(probs, dtype=torch.int)
+    y_pred.scatter_(1, top_k.indices, 1)
+    y_pred = y_pred.detach().cpu().numpy()
+    y_true = Y_test_tensor.detach().cpu().numpy()
+
+    precision = precision_score(y_true, y_pred, average="macro", zero_division=0)
+    recall = recall_score(y_true, y_pred, average="macro", zero_division=0)
+    f1 = f1_score(y_true, y_pred, average="macro", zero_division=0)
+
+    print(f"Precision (macro): {precision:.4f}")
+    print(f"Recall    (macro): {recall:.4f}")
+    print(f"F1-score  (macro): {f1:.4f}")
+
+    precision = precision_score(y_true, y_pred, average="micro", zero_division=0)
+    recall = recall_score(y_true, y_pred, average="micro", zero_division=0)
+    f1 = f1_score(y_true, y_pred, average="micro", zero_division=0)
+
+    print(f"Precision (micro): {precision:.4f}")
+    print(f"Recall    (micro): {recall:.4f}")
+    print(f"F1-score  (micro): {f1:.4f}")
