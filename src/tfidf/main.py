@@ -315,6 +315,36 @@ class TfIdf():
         self.model = model
         self.pipeline = pipeline
 
+    def classify(self,
+                 text: str,
+                 TOP_K: int) -> list[str]:
+        x = self.pipeline.transform(text)
+        x_tensor = torch.tensor(x, device = self.device)
+        logits = self.model(x_tensor)
+        probs = torch.sigmoid(logits)
+        # preds = (probs > 0.1).int()
+        top_k = torch.topk(probs, k=TOP_K, dim = 1)
+
+        for idx, scores in zip(
+            top_k.indices,
+            top_k.values,
+            #bibcodes,
+            #text_test,
+            #uats_test
+        ):
+            predicted_uats = [self.idx2node[int(uat)] for uat in idx]
+            #uats_labels = [self.node2label.get(uat, "UNKNOWN") for uat in uats_test]
+            predicted_uats_labels = [self.node2label.get(uat, "UNKNOWN") for uat in predicted_uats]
+            #print("Bibcode:", bibcode, "Text:", text)
+            #print("paper UATs:", '\n\t'.join([f"{uat} ({label})" for uat, label in zip(uats, uats_labels)]))
+            #print("predicted UATs:")
+            for i, (score, uat, label) in enumerate(zip(scores, predicted_uats, predicted_uats_labels), start=1):
+                print(f"\tTop {i} | {score:.4f}: {uat} ({label})")
+            if self.coherence:
+                print(f"Mean npmi of top {TOP_K} labels:", self.coherence.mean_npmi(uats))
+            print("")
+            predicted_uats = [self.idx2node[int(uat)] for uat in self.idx]
+            return predicted_uats
 
 # 4. Inference
 if __name__ == "__main__":
