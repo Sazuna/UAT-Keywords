@@ -3,7 +3,8 @@ Find UATs by naive textual match
 """
 from typing import Set
 from rdflib import SKOS
-from src.utils.config import UATS_JSON, CORPUS_DIR, ADS_HELIO_CORPUS_DIR
+from src.utils.config import UATS_JSON, CORPUS_DIR, ADS_HELIO_CORPUS_DIR, BIBTEX_PATH
+from src.utils.uat_utils import get_uat_label
 from src.corpus import uat_to_corpus
 import json
 import regex
@@ -34,6 +35,10 @@ sorted_labels = sorted(label2uat.keys(), key=len, reverse=True)
 # This category matches with too many things (false positive) so we remove it
 sorted_labels.remove("of star")
 sorted_labels.remove("of stars")
+# FIXME maybe keep the cased version of labels and re-match it, or check that they are not all lower cases in original text
+
+# Remove labels that are too short (ex: "de" in Observatoire de Paris => Dwarf Elliptical's alt label)
+sorted_labels = [l for l in sorted_labels if len(l) > 3]
 
 # Escape special characters
 escaped_labels = [regex.escape(label) for label in sorted_labels]
@@ -97,6 +102,12 @@ def main():
         y_true.append(document.uats)
         total += 1
     print_results(y_true, y_pred, "ADS HELIO", total)
+    for document in reader.read_bibtex(BIBTEX_PATH):
+        predicted = label_match(document.text)
+        print(document.bibcode, document.title)
+        for p in predicted:
+            print(p, get_uat_label(p))
+        print()
 
 if __name__ == "__main__":
     main()

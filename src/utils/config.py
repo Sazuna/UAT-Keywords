@@ -17,7 +17,7 @@ CORPUS_DIR = ROOT / "corpus"
 OUTPUT_DIR = ROOT / "src" / "KAILAS" / "output"
 if "SSH_CONNECTION" in os.environ or "SSH_CLIENT" in os.environ:
     # tycho
-    CACHE_DIR = Path("/scratch2") / USERNAME / "cache"
+    CACHE_DIR = Path("/data") / USERNAME / "cache"
     DATA_DIR = Path("/data") / USERNAME / "cache"
 else:
     # local
